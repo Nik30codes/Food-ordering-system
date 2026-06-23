@@ -1,0 +1,27 @@
+ode# Dependencies
+node_modules/
+
+# Environment variables (contains passwords, secrets)
+.env
+.env.local
+.env.production
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Build output
+dist/
+build/
+
+# Package lock (optional - remove this line if you want to track it)
+# package-lock.json
