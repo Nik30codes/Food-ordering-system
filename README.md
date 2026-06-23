@@ -76,4 +76,4 @@ See `backend/.env.example` for required environment variables.
 ## Team
 
 - **Customer side (Backend + Frontend):** Nikunj
-- **Admin side:** Team member
+- **Admin side:** Bhavya
