@@ -1,14 +1,19 @@
 import express from "express";
-import { register, login } from "../controllers/authController.js";
+import { register, login, logout } from "../controllers/authController.js";
 import validate from "../middleware/validate.js";
 import { registerSchema, loginSchema } from "../utils/validation.js";
+import { authLimiter } from "../middleware/rateLimiter.js";
+import auth from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Register
-router.post("/register", validate(registerSchema), register);
+// Register (rate limited)
+router.post("/register", authLimiter, validate(registerSchema), register);
 
-// Login
-router.post("/login", validate(loginSchema), login);
+// Login (rate limited)
+router.post("/login", authLimiter, validate(loginSchema), login);
+
+// Logout (requires auth)
+router.post("/logout", auth, logout);
 
 export default router;

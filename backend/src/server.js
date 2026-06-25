@@ -1,10 +1,17 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import cookieParser from "cookie-parser";
+import morgan from "morgan";
+import hpp from "hpp";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 import pool from "./db/db.js";
+import { apiLimiter } from "./middleware/rateLimiter.js";
+import sanitize from "./middleware/sanitize.js";
+import errorHandler from "./middleware/errorHandler.js";
 import authRoutes from "./routes/authRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
@@ -14,9 +21,26 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Allowed origins (add your production domain later)
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(helmet()); // Secure HTTP headers
+app.use(morgan("combined")); // Request logging (IP, route, status, time)
+app.use(cookieParser()); // Parse cookies
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
+app.use(express.json({ limit: "10kb" })); // Body size limit
+app.use(express.urlencoded({ extended: false, limit: "10kb" })); // URL-encoded body limit
+app.use(hpp()); // Prevent HTTP Parameter Pollution
+app.use(sanitize); // Strip HTML/scripts from all inputs
+app.use("/api", apiLimiter); // General rate limit on all API routes
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -39,6 +63,14 @@ app.get("/api/health", async (req, res) => {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
+
+// 404 handler — for routes that don't exist
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
+
+// Global error handler — must be LAST middleware
+app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
