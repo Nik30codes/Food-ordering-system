@@ -1,0 +1,184 @@
+import { Link } from "react-router-dom";
+import { ArrowRight, Users, Star, ChefHat, Leaf, Clock, Sparkles } from "lucide-react";
+
+const Home = () => {
+    return (
+        <div className="bg-cream">
+            {/* Hero Section */}
+            <section className="bg-primary relative overflow-hidden">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight">
+                                Experience Fine{" "}
+                                <span className="text-accent">Dining</span> Like Never Before
+                            </h1>
+                            <p className="text-white/70 mt-6 text-lg">
+                                Fresh ingredients, unforgettable taste, premium ambiance. Order your favorite meals with just a few clicks.
+                            </p>
+                            <div className="mt-8 flex flex-wrap gap-4">
+                                <Link
+                                    to="/menu"
+                                    className="bg-accent hover:bg-accent-dark text-white px-6 py-3 rounded-full font-medium flex items-center gap-2 transition-all"
+                                >
+                                    Explore Menu <ArrowRight size={18} />
+                                </Link>
+                                <Link
+                                    to="/register"
+                                    className="border-2 border-white text-white hover:bg-white hover:text-primary px-6 py-3 rounded-full font-medium transition-all"
+                                >
+                                    Join Us
+                                </Link>
+                            </div>
+                            {/* Stats */}
+                            <div className="mt-12 flex gap-8">
+                                <div className="flex items-center gap-2">
+                                    <div className="flex -space-x-2">
+                                        <div className="w-8 h-8 rounded-full bg-accent-light border-2 border-primary flex items-center justify-center">
+                                            <Users size={14} className="text-white" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-white font-bold text-lg">10,000+</p>
+                                        <p className="text-white/60 text-xs">Happy Guests</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Star size={20} className="text-accent fill-accent" />
+                                    <div>
+                                        <p className="text-white font-bold text-lg">4.9</p>
+                                        <p className="text-white/60 text-xs">Rating</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="hidden md:flex justify-center">
+                            <div className="w-80 h-80 rounded-full bg-primary-light flex items-center justify-center border-4 border-accent/30">
+                                <div className="text-center">
+                                    <ChefHat size={80} className="text-accent mx-auto" />
+                                    <p className="text-white/80 mt-4 text-sm">Premium Quality</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {/* Decorative wave */}
+                <div className="absolute bottom-0 left-0 right-0">
+                    <svg viewBox="0 0 1440 60" className="w-full h-auto fill-cream">
+                        <path d="M0,40 C360,80 720,0 1440,40 L1440,60 L0,60 Z" />
+                    </svg>
+                </div>
+            </section>
+
+            {/* Popular Menu Section */}
+            <section className="py-16">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-12">
+                        <span className="bg-primary/10 text-primary px-4 py-1 rounded-full text-sm font-medium">
+                            Popular Menu
+                        </span>
+                        <h2 className="text-3xl md:text-4xl font-bold text-charcoal mt-4">
+                            Discover our chef's most loved<br />and trending dishes.
+                        </h2>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        {[
+                            { name: "Truffle Mushroom Pizza", icon: "🍕" },
+                            { name: "Classic Cheese Burger", icon: "🍔" },
+                            { name: "Sushi Deluxe Platter", icon: "🍣" },
+                            { name: "Creamy Alfredo Pasta", icon: "🍝" },
+                        ].map((item, index) => (
+                            <div
+                                key={index}
+                                className={`rounded-2xl p-6 text-center transition-all hover:scale-105 cursor-pointer ${index === 1 ? "bg-primary text-white" : "bg-white shadow-md"
+                                    }`}
+                            >
+                                <div className="text-5xl mb-4">{item.icon}</div>
+                                <p className={`font-medium text-sm ${index === 1 ? "text-white" : "text-charcoal"}`}>
+                                    {item.name}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="text-center mt-8">
+                        <Link
+                            to="/menu"
+                            className="inline-flex items-center gap-2 bg-accent hover:bg-accent-dark text-white px-6 py-3 rounded-full font-medium transition-all"
+                        >
+                            Explore Full Menu <ArrowRight size={18} />
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
+            {/* Why Choose Us */}
+            <section className="bg-charcoal py-16">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 className="text-3xl font-bold text-white text-center mb-12">Why With Us?</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        {[
+                            { icon: <Leaf size={28} />, title: "Fresh Ingredients", desc: "Locally sourced, organic produce" },
+                            { icon: <ChefHat size={28} />, title: "Master Chefs", desc: "Expert culinary artists" },
+                            { icon: <Sparkles size={28} />, title: "Premium Atmosphere", desc: "Elegant dining experience" },
+                            { icon: <Clock size={28} />, title: "Fast & Friendly", desc: "Quick service, warm smiles" },
+                        ].map((item, index) => (
+                            <div key={index} className="bg-charcoal-light rounded-xl p-6 text-center hover:bg-primary transition-all">
+                                <div className="text-accent flex justify-center mb-4">{item.icon}</div>
+                                <h3 className="text-white font-semibold mb-2">{item.title}</h3>
+                                <p className="text-white/60 text-sm">{item.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Reserve Table CTA */}
+            <section className="py-16">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="bg-primary rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div>
+                            <h2 className="text-3xl font-bold text-white">Reserve Your Table Today</h2>
+                            <p className="text-white/70 mt-2">
+                                Book your spot and enjoy a fine dining experience with us.
+                            </p>
+                        </div>
+                        <Link
+                            to="/menu"
+                            className="bg-accent hover:bg-accent-dark text-white px-8 py-3 rounded-full font-medium flex items-center gap-2 transition-all whitespace-nowrap"
+                        >
+                            Order Now <ArrowRight size={18} />
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
+            {/* Testimonials */}
+            <section className="py-16 bg-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 className="text-3xl font-bold text-charcoal text-center mb-12">
+                        WHAT PEOPLE ARE SAYING...
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {[
+                            { text: "Absolutely the best dining experience I've ever had. The food was extraordinary and the service impeccable!", name: "Priya S.", stars: 5 },
+                            { text: "Fresh ingredients, creative combinations, and truly unique flavors. Can't wait to come back!", name: "Rahul M.", stars: 5 },
+                            { text: "From the appetizers to desserts, everything was perfection. A must-visit restaurant!", name: "Ananya K.", stars: 5 },
+                        ].map((review, index) => (
+                            <div key={index} className="bg-cream rounded-xl p-6 border border-cream-dark">
+                                <div className="flex gap-1 mb-3">
+                                    {Array.from({ length: review.stars }).map((_, i) => (
+                                        <Star key={i} size={16} className="text-accent fill-accent" />
+                                    ))}
+                                </div>
+                                <p className="text-charcoal/70 text-sm italic">"{review.text}"</p>
+                                <p className="mt-4 font-semibold text-charcoal">{review.name}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        </div>
+    );
+};
+
+export default Home;

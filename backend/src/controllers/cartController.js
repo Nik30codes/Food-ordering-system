@@ -24,7 +24,7 @@ export const getCart = async (req, res) => {
       `SELECT ci.id, ci.menu_item_id, ci.quantity, ci.created_at
        FROM cart_items ci
        WHERE ci.cart_id = $1
-       ORDER BY ci.created_at DSC`,
+       ORDER BY ci.created_at DESC`,
       [cart.id]
     );
 

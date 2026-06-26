@@ -24,6 +24,7 @@ import adminMenuItemRoutes from "./routes/adminMenuItemRoutes.js";
 import adminTableRoutes from "./routes/adminTableRoutes.js";
 import adminOrderRoutes from "./routes/adminOrderRoutes.js";
 import adminAnalyticsRoutes from "./routes/adminAnalyticsRoutes.js";
+import publicMenuRoutes from "./routes/publicMenuRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -31,6 +32,7 @@ const PORT = process.env.PORT || 5000;
 // Allowed origins (add your production domain later)
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:5174",
   "http://localhost:3000",
   process.env.FRONTEND_URL,
 ].filter(Boolean);
@@ -55,6 +57,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/menu", publicMenuRoutes);
 
 // Routes — Admin side
 app.use("/api/admin/auth", adminAuthRoutes);
