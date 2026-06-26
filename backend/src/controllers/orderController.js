@@ -20,7 +20,7 @@ export const placeOrder = async (req, res) => {
 
     // Get cart items
     const cartItems = await client.query(
-      "SELECT menu_item_id, quantity FROM cart_items WHERE cart_id = $1",
+      "SELECT menu_item_id, quantity, food_type_choice FROM cart_items WHERE cart_id = $1",
       [cartId]
     );
 
@@ -32,14 +32,16 @@ export const placeOrder = async (req, res) => {
     // Get prices for each menu item and calculate total
     const menuItemIds = cartItems.rows.map((item) => item.menu_item_id);
     const menuItems = await client.query(
-      "SELECT id, price FROM menu_items WHERE id = ANY($1)",
+      "SELECT id, price, restaurant_id FROM menu_items WHERE id = ANY($1)",
       [menuItemIds]
     );
 
     // Build a price map
     const priceMap = {};
+    let restaurantId = null;
     for (const item of menuItems.rows) {
       priceMap[item.id] = parseFloat(item.price);
+      if (!restaurantId) restaurantId = item.restaurant_id;
     }
 
     // Verify all items have prices (exist in menu)
@@ -60,8 +62,8 @@ export const placeOrder = async (req, res) => {
 
     // Create order
     const order = await client.query(
-      "INSERT INTO orders (user_id, total_amount, status, created_at, updated_at) VALUES ($1, $2, 'pending', NOW(), NOW()) RETURNING *",
-      [userId, totalAmount]
+      "INSERT INTO orders (user_id, restaurant_id, total_amount, status, created_at, updated_at) VALUES ($1, $2, $3, 'pending', NOW(), NOW()) RETURNING *",
+      [userId, restaurantId, totalAmount]
     );
 
     const orderId = order.rows[0].id;
@@ -69,8 +71,8 @@ export const placeOrder = async (req, res) => {
     // Copy cart items to order items (with price snapshot)
     for (const cartItem of cartItems.rows) {
       await client.query(
-        "INSERT INTO order_items (order_id, menu_item_id, quantity, price, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())",
-        [orderId, cartItem.menu_item_id, cartItem.quantity, priceMap[cartItem.menu_item_id]]
+        "INSERT INTO order_items (order_id, menu_item_id, quantity, price, food_type_choice, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW())",
+        [orderId, cartItem.menu_item_id, cartItem.quantity, priceMap[cartItem.menu_item_id], cartItem.food_type_choice]
       );
     }
 
@@ -104,7 +106,20 @@ export const getOrders = async (req, res) => {
       [userId]
     );
 
-    res.json({ orders: orders.rows });
+    // Get items for each order
+    const ordersWithItems = [];
+    for (const order of orders.rows) {
+      const items = await pool.query(
+        `SELECT oi.menu_item_id, oi.quantity, oi.price, mi.name
+         FROM order_items oi
+         LEFT JOIN menu_items mi ON oi.menu_item_id = mi.id
+         WHERE oi.order_id = $1`,
+        [order.id]
+      );
+      ordersWithItems.push({ ...order, items: items.rows });
+    }
+
+    res.json({ orders: ordersWithItems });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

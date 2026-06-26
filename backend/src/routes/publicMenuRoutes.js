@@ -45,4 +45,22 @@ router.get("/items", async (req, res) => {
     }
 });
 
+// GET /api/menu/featured — Public: get featured/popular items
+router.get("/featured", async (req, res) => {
+    try {
+        const items = await pool.query(
+            `SELECT mi.id, mi.name, mi.price, mi.discount_price, mi.image_url, mi.is_veg,
+                    c.name as category_name
+             FROM menu_items mi
+             JOIN categories c ON mi.category_id = c.id
+             WHERE mi.is_featured = TRUE AND mi.is_available = TRUE AND c.is_active = TRUE
+             ORDER BY mi.display_order ASC
+             LIMIT 8`
+        );
+        res.json({ featured_items: items.rows });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+});
+
 export default router;

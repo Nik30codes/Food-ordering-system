@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Package, Clock, CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import { getOrders, cancelOrder } from "../services/orderService.js";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const statusConfig = {
     pending: { color: "bg-yellow-100 text-yellow-700", icon: Clock, label: "Pending" },
@@ -97,6 +97,16 @@ const Orders = () => {
                                                     day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
                                                 })}
                                             </p>
+                                            {order.items && order.items.length > 0 && (
+                                                <div className="mt-2 text-sm text-charcoal/70">
+                                                    {order.items.map((item, idx) => (
+                                                        <span key={idx}>
+                                                            {item.name || `Item #${item.menu_item_id}`} × {item.quantity}
+                                                            {idx < order.items.length - 1 ? ", " : ""}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="flex items-center gap-4">
                                             <span className="text-lg font-bold text-primary">₹{order.total_amount}</span>

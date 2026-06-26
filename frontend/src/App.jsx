@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import { AdminAuthProvider } from "./context/AdminAuthContext.jsx";
@@ -77,11 +77,10 @@ function App() {
 
             <Toaster
               position="top-right"
+              richColors
+              closeButton
               toastOptions={{
                 duration: 3000,
-                style: { background: "#1a3c34", color: "#fff", borderRadius: "12px" },
-                success: { iconTheme: { primary: "#e87a2e", secondary: "#fff" } },
-                error: { style: { background: "#dc2626" } },
               }}
             />
           </AdminAuthProvider>

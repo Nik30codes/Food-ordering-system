@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
 import api from "../../services/api.js";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const AdminCategories = () => {
     const [categories, setCategories] = useState([]);
@@ -9,6 +9,7 @@ const AdminCategories = () => {
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [form, setForm] = useState({ name: "", description: "", image_url: "", display_order: 0 });
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => { fetchCategories(); }, []);
 
@@ -29,6 +30,28 @@ const AdminCategories = () => {
         setEditing(cat);
         setForm({ name: cat.name, description: cat.description || "", image_url: cat.image_url || "", display_order: cat.display_order || 0 });
         setShowModal(true);
+    };
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("image", file);
+
+        setUploading(true);
+        try {
+            const res = await api.post("/api/admin/upload", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            setForm((prev) => ({ ...prev, image_url: res.data.image_url }));
+            toast.success("Image uploaded!");
+        } catch (error) {
+            toast.error("Upload not available right now, paste a URL instead.");
+        } finally {
+            setUploading(false);
+            e.target.value = "";
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -120,8 +143,26 @@ const AdminCategories = () => {
                                 <input type="text" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Optional description" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-charcoal mb-1">Image URL</label>
-                                <input type="text" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" placeholder="https://..." />
+                                <label className="block text-sm font-medium text-charcoal mb-1">Image</label>
+                                <div className="space-y-2">
+                                    {form.image_url && (
+                                        <img src={form.image_url} alt="Preview" className="w-full h-32 object-cover rounded-lg" />
+                                    )}
+                                    <div className="flex gap-2">
+                                        <label className="flex-1 cursor-pointer bg-gray-100 hover:bg-gray-200 text-charcoal text-sm font-medium py-2.5 rounded-lg text-center transition-colors">
+                                            {uploading ? "Uploading..." : "📷 Camera / Gallery"}
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                capture="environment"
+                                                onChange={handleImageUpload}
+                                                disabled={uploading}
+                                                className="hidden"
+                                            />
+                                        </label>
+                                    </div>
+                                    <input type="text" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm" placeholder="Or paste URL directly" />
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-charcoal mb-1">Display Order</label>

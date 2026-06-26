@@ -1,6 +1,6 @@
 import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
 import { useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const Contact = () => {
     const [name, setName] = useState("");

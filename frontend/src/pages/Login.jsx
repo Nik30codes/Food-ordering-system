@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { loginUser } from "../services/authService.js";
 import { useAuth } from "../context/AuthContext.jsx";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const Login = () => {
     const [email, setEmail] = useState("");

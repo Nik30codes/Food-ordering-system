@@ -56,7 +56,7 @@ export const createPaymentOrder = async (req, res) => {
 
     // Store pending payment record
     await pool.query(
-      "INSERT INTO payments (order_id, amount, payment_method, payment_status, transaction_id, created_at, updated_at) VALUES ($1, $2, 'razorpay', 'pending', $3, NOW(), NOW())",
+      "INSERT INTO payments (order_id, amount, payment_method, payment_status, transaction_id, created_at, updated_at) VALUES ($1, $2, 'RAZORPAY', 'pending', $3, NOW(), NOW())",
       [order_id, amount, razorpayOrder.id]
     );
 
@@ -67,7 +67,8 @@ export const createPaymentOrder = async (req, res) => {
       key_id: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("[PAYMENT CREATE ERROR]:", error.message);
+    res.status(500).json({ message: "Payment setup failed", error: error.message });
   }
 };
 

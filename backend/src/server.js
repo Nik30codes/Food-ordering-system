@@ -25,6 +25,8 @@ import adminTableRoutes from "./routes/adminTableRoutes.js";
 import adminOrderRoutes from "./routes/adminOrderRoutes.js";
 import adminAnalyticsRoutes from "./routes/adminAnalyticsRoutes.js";
 import publicMenuRoutes from "./routes/publicMenuRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
+import webhookRoutes from "./routes/webhookRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -36,6 +38,9 @@ const allowedOrigins = [
   "http://localhost:3000",
   process.env.FRONTEND_URL,
 ].filter(Boolean);
+
+// Webhook route (must be before express.json — needs raw body for signature verification)
+app.use("/api/webhooks", webhookRoutes);
 
 // Middleware
 app.use(helmet()); // Secure HTTP headers
@@ -67,6 +72,7 @@ app.use("/api/admin/menu-items", adminMenuItemRoutes);
 app.use("/api/admin/tables", adminTableRoutes);
 app.use("/api/admin/orders", adminOrderRoutes);
 app.use("/api/admin/analytics", adminAnalyticsRoutes);
+app.use("/api/admin/upload", uploadRoutes);
 
 // Health check route
 app.get("/", (req, res) => {

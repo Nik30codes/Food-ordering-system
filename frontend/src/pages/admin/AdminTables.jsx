@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
 import api from "../../services/api.js";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const AdminTables = () => {
     const [tables, setTables] = useState([]);

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Save } from "lucide-react";
 import api from "../../services/api.js";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const AdminSettings = () => {
     const [restaurant, setRestaurant] = useState(null);

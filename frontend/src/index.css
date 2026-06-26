@@ -14,7 +14,7 @@
 }
 
 body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Noto Sans', system-ui, -apple-system, sans-serif;
     background-color: #fdf6e9;
 }
 
@@ -30,4 +30,13 @@ body {
 ::-webkit-scrollbar-thumb {
     background: #1a3c34;
     border-radius: 4px;
+}
+
+/* Hide scrollbar for category filters on mobile */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }

@@ -15,6 +15,7 @@ export const loginSchema = z.object({
 export const addToCartSchema = z.object({
   menu_item_id: z.number().int().positive("Invalid menu item ID"),
   quantity: z.number().int().min(1, "Quantity must be at least 1").max(20, "Maximum 20 items allowed"),
+  food_type_choice: z.string().optional().nullable(),
 });
 
 export const updateCartSchema = z.object({

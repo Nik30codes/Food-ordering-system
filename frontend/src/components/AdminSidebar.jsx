@@ -1,8 +1,8 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, UtensilsCrossed, FolderOpen, Table2, ClipboardList, BarChart3, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, UtensilsCrossed, FolderOpen, Table2, ClipboardList, BarChart3, Settings, LogOut, X } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext.jsx";
 
-const AdminSidebar = () => {
+const AdminSidebar = ({ onClose }) => {
     const { admin, logout } = useAdminAuth();
 
     const links = [
@@ -16,13 +16,16 @@ const AdminSidebar = () => {
     ];
 
     return (
-        <aside className="w-64 bg-charcoal min-h-screen flex flex-col fixed left-0 top-0 z-40">
-            {/* Logo */}
-            <div className="p-6 border-b border-charcoal-light">
+        <aside className="w-64 bg-charcoal min-h-screen flex flex-col">
+            {/* Logo + close button */}
+            <div className="p-6 border-b border-charcoal-light flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-white">
                     Aki<span className="text-accent">o</span>
                     <span className="text-white/50 text-sm font-normal ml-2">Admin</span>
                 </h1>
+                <button onClick={onClose} className="lg:hidden text-white/50 hover:text-white" aria-label="Close menu">
+                    <X size={20} />
+                </button>
             </div>
 
             {/* Nav Links */}
@@ -32,6 +35,7 @@ const AdminSidebar = () => {
                         key={link.to}
                         to={link.to}
                         end={link.end}
+                        onClick={onClose}
                         className={({ isActive }) =>
                             `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${isActive
                                 ? "bg-primary text-white"

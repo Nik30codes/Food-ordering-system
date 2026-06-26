@@ -76,28 +76,30 @@ export const reorderCategoriesSchema = z.object({
 export const createMenuItemSchema = z.object({
     category_id: z.number().int().positive("Invalid category ID"),
     name: z.string().min(2, "Item name must be at least 2 characters").max(200),
-    description: z.string().optional(),
+    description: z.string().optional().nullable(),
     price: z.number().positive("Price must be greater than 0"),
     discount_price: z.number().positive().optional().nullable(),
-    image_url: z.string().url("Invalid image URL").optional().or(z.literal("")),
+    image_url: z.string().optional().nullable(),
     is_veg: z.boolean().optional(),
+    food_type: z.string().optional(),
     is_available: z.boolean().optional(),
-    preparation_time: z.number().int().min(1).optional(),
-    calories: z.number().int().min(0).optional(),
+    preparation_time: z.number().int().min(0).optional().nullable(),
+    calories: z.number().int().min(0).optional().nullable(),
     display_order: z.number().int().min(0).optional(),
 });
 
 export const updateMenuItemSchema = z.object({
     category_id: z.number().int().positive().optional(),
     name: z.string().min(2).max(200).optional(),
-    description: z.string().optional(),
+    description: z.string().optional().nullable(),
     price: z.number().positive().optional(),
     discount_price: z.number().positive().optional().nullable(),
-    image_url: z.string().url().optional().or(z.literal("")),
+    image_url: z.string().optional().nullable(),
     is_veg: z.boolean().optional(),
+    food_type: z.string().optional(),
     is_available: z.boolean().optional(),
-    preparation_time: z.number().int().min(1).optional(),
-    calories: z.number().int().min(0).optional(),
+    preparation_time: z.number().int().min(0).optional().nullable(),
+    calories: z.number().int().min(0).optional().nullable(),
     display_order: z.number().int().min(0).optional(),
 });
 
@@ -119,8 +121,6 @@ export const updateTableSchema = z.object({
 
 // Order Status Schema
 export const updateOrderStatusSchema = z.object({
-    status: z.enum(["pending", "accepted", "preparing", "ready", "completed", "cancelled"], {
-        message: "Invalid status value",
-    }),
-    remarks: z.string().optional(),
+    status: z.enum(["pending", "accepted", "preparing", "ready", "completed", "cancelled"]),
+    remarks: z.string().optional().nullable(),
 });

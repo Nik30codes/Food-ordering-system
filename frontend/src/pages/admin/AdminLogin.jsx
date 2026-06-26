@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useAdminAuth } from "../../context/AdminAuthContext.jsx";
 import api from "../../services/api.js";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const AdminLogin = () => {
     const [email, setEmail] = useState("");

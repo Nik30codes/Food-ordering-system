@@ -25,7 +25,28 @@ export const getRestaurantOrders = async (req, res) => {
 
         const orders = await pool.query(query, params);
 
-        res.json({ orders: orders.rows });
+        // Get items for each order
+        const ordersWithItems = [];
+        for (const order of orders.rows) {
+            const items = await pool.query(
+                `SELECT oi.menu_item_id, oi.quantity, oi.price, mi.name
+                 FROM order_items oi
+                 LEFT JOIN menu_items mi ON oi.menu_item_id = mi.id
+                 WHERE oi.order_id = $1`,
+                [order.id]
+            );
+            const payment = await pool.query(
+                "SELECT payment_status, payment_method, transaction_id FROM payments WHERE order_id = $1 ORDER BY created_at DESC LIMIT 1",
+                [order.id]
+            );
+            ordersWithItems.push({
+                ...order,
+                items: items.rows,
+                payment: payment.rows.length > 0 ? payment.rows[0] : null,
+            });
+        }
+
+        res.json({ orders: ordersWithItems });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }

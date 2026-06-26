@@ -21,8 +21,10 @@ export const getCart = async (req, res) => {
     const cart = await getOrCreateCart(userId);
 
     const items = await pool.query(
-      `SELECT ci.id, ci.menu_item_id, ci.quantity, ci.created_at
+      `SELECT ci.id, ci.menu_item_id, ci.quantity, ci.food_type_choice, ci.created_at,
+              mi.name, mi.price, mi.discount_price, mi.image_url
        FROM cart_items ci
+       LEFT JOIN menu_items mi ON ci.menu_item_id = mi.id
        WHERE ci.cart_id = $1
        ORDER BY ci.created_at DESC`,
       [cart.id]
@@ -38,14 +40,14 @@ export const getCart = async (req, res) => {
 export const addToCart = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { menu_item_id, quantity } = req.body;
+    const { menu_item_id, quantity, food_type_choice } = req.body;
 
     const cart = await getOrCreateCart(userId);
 
-    // Check if item already exists in cart
+    // Check if item already exists in cart (same item + same food type choice)
     const existingItem = await pool.query(
-      "SELECT * FROM cart_items WHERE cart_id = $1 AND menu_item_id = $2",
-      [cart.id, menu_item_id]
+      "SELECT * FROM cart_items WHERE cart_id = $1 AND menu_item_id = $2 AND (food_type_choice = $3 OR (food_type_choice IS NULL AND $3 IS NULL))",
+      [cart.id, menu_item_id, food_type_choice || null]
     );
 
     let item;
@@ -59,8 +61,8 @@ export const addToCart = async (req, res) => {
     } else {
       // Insert new item
       item = await pool.query(
-        "INSERT INTO cart_items (cart_id, menu_item_id, quantity, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING *",
-        [cart.id, menu_item_id, quantity]
+        "INSERT INTO cart_items (cart_id, menu_item_id, quantity, food_type_choice, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING *",
+        [cart.id, menu_item_id, quantity, food_type_choice || null]
       );
     }
 

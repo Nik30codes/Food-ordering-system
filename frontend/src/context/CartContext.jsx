@@ -38,8 +38,8 @@ export const CartProvider = ({ children }) => {
         }
     };
 
-    const addToCart = async (menuItemId, quantity = 1) => {
-        const data = await addToCartAPI(menuItemId, quantity);
+    const addToCart = async (menuItemId, quantity = 1, foodTypeChoice = null) => {
+        const data = await addToCartAPI(menuItemId, quantity, foodTypeChoice);
         await fetchCart();
         return data;
     };

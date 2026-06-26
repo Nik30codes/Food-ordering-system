@@ -5,7 +5,7 @@ import validate from "../middleware/validate.js";
 import { createMenuItemSchema, updateMenuItemSchema } from "../utils/adminValidation.js";
 import {
     getMenuItems, getMenuItemById, createMenuItem,
-    updateMenuItem, deleteMenuItem, toggleAvailability,
+    updateMenuItem, deleteMenuItem, toggleAvailability, toggleFeatured,
     addMenuItemImage, removeMenuItemImage,
 } from "../controllers/menuItemController.js";
 
@@ -18,6 +18,7 @@ router.post("/", adminAuth, requireRole("owner", "manager"), validate(createMenu
 router.put("/:id", adminAuth, requireRole("owner", "manager"), validate(updateMenuItemSchema), updateMenuItem);
 router.delete("/:id", adminAuth, requireRole("owner", "manager"), deleteMenuItem);
 router.put("/:id/availability", adminAuth, toggleAvailability);
+router.put("/:id/featured", adminAuth, toggleFeatured);
 router.post("/:id/images", adminAuth, requireRole("owner", "manager"), addMenuItemImage);
 router.delete("/:id/images/:imageId", adminAuth, requireRole("owner", "manager"), removeMenuItemImage);
 

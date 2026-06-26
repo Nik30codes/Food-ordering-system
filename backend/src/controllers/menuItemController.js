@@ -220,6 +220,38 @@ export const toggleAvailability = async (req, res) => {
     }
 };
 
+// PUT /api/admin/menu-items/:id/featured — Toggle featured status
+export const toggleFeatured = async (req, res) => {
+    try {
+        const restaurantId = req.admin.restaurant_id;
+        const itemId = parseInt(req.params.id);
+
+        if (isNaN(itemId)) {
+            return res.status(400).json({ message: "Invalid menu item ID" });
+        }
+
+        const current = await pool.query(
+            "SELECT is_featured FROM menu_items WHERE id = $1 AND restaurant_id = $2",
+            [itemId, restaurantId]
+        );
+
+        if (current.rows.length === 0) {
+            return res.status(404).json({ message: "Menu item not found" });
+        }
+
+        const newStatus = !current.rows[0].is_featured;
+
+        await pool.query(
+            "UPDATE menu_items SET is_featured = $1, updated_at = NOW() WHERE id = $2",
+            [newStatus, itemId]
+        );
+
+        res.json({ message: `Item ${newStatus ? "added to" : "removed from"} featured`, is_featured: newStatus });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
 // POST /api/admin/menu-items/:id/images — Add image to menu item
 export const addMenuItemImage = async (req, res) => {
     try {

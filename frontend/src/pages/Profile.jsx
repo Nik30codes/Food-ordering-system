@@ -2,7 +2,7 @@ import { useState } from "react";
 import { User, Mail, Phone, Lock, Save } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import api from "../services/api.js";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const Profile = () => {
     const { user, checkAuth } = useAuth();

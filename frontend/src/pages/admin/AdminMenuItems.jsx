@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, X, Leaf } from "lucide-react";
 import api from "../../services/api.js";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const AdminMenuItems = () => {
     const [items, setItems] = useState([]);
@@ -9,10 +9,33 @@ const AdminMenuItems = () => {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
+    const [uploading, setUploading] = useState(false);
     const [form, setForm] = useState({
         category_id: "", name: "", description: "", price: "", discount_price: "",
         image_url: "", is_veg: false, is_available: true, preparation_time: "", calories: "",
     });
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("image", file);
+
+        setUploading(true);
+        try {
+            const res = await api.post("/api/admin/upload", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            setForm((prev) => ({ ...prev, image_url: res.data.image_url }));
+            toast.success("Image uploaded!");
+        } catch (error) {
+            toast.error("Upload not available right now, paste a URL instead.");
+        } finally {
+            setUploading(false);
+            e.target.value = "";
+        }
+    };
 
     useEffect(() => { fetchData(); }, []);
 
@@ -68,7 +91,7 @@ const AdminMenuItems = () => {
             setShowModal(false);
             fetchData();
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed");
+            toast.error(error.response?.data?.message || "Couldn't save, try again");
         }
     };
 
@@ -79,7 +102,7 @@ const AdminMenuItems = () => {
             toast.success("Item deleted");
             fetchData();
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed");
+            toast.error(error.response?.data?.message || "Couldn't delete, try again");
         }
     };
 
@@ -89,7 +112,17 @@ const AdminMenuItems = () => {
             toast.success(res.data.message);
             fetchData();
         } catch (error) {
-            toast.error("Failed");
+            toast.error("Something went wrong");
+        }
+    };
+
+    const toggleFeatured = async (id) => {
+        try {
+            const res = await api.put(`/api/admin/menu-items/${id}/featured`);
+            toast.success(res.data.message);
+            fetchData();
+        } catch (error) {
+            toast.error("Something went wrong");
         }
     };
 
@@ -127,7 +160,10 @@ const AdminMenuItems = () => {
                                         <h3 className="font-semibold text-charcoal flex items-center gap-1">
                                             {item.name}
                                             {item.food_type === "both" ? (
-                                                <span className="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] rounded font-medium">Veg & Non-Veg</span>
+                                                <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 bg-gradient-to-r from-green-50 to-red-50 border border-gray-200 text-[10px] rounded font-medium text-charcoal/70">
+                                                    <span className="w-2.5 h-2.5 rounded-sm flex overflow-hidden"><span className="w-1/2 bg-green-600"></span><span className="w-1/2 bg-red-600"></span></span>
+                                                    Veg/Non-Veg
+                                                </span>
                                             ) : item.is_veg ? (
                                                 <Leaf size={14} className="text-green-500" />
                                             ) : (
@@ -139,12 +175,20 @@ const AdminMenuItems = () => {
                                     <p className="font-bold text-primary">₹{item.price}</p>
                                 </div>
                                 <div className="flex items-center justify-between mt-3">
-                                    <button
-                                        onClick={() => toggleAvailability(item.id)}
-                                        className={`px-2 py-1 rounded text-xs font-medium ${item.is_available ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
-                                    >
-                                        {item.is_available ? "Available" : "Unavailable"}
-                                    </button>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => toggleAvailability(item.id)}
+                                            className={`px-2 py-1 rounded text-xs font-medium ${item.is_available ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                                        >
+                                            {item.is_available ? "Available" : "Unavailable"}
+                                        </button>
+                                        <button
+                                            onClick={() => toggleFeatured(item.id)}
+                                            className={`px-2 py-1 rounded text-xs font-medium ${item.is_featured ? "bg-yellow-100 text-yellow-700" : "bg-gray-100 text-gray-500"}`}
+                                        >
+                                            {item.is_featured ? "⭐ Featured" : "☆ Feature"}
+                                        </button>
+                                    </div>
                                     <div className="flex gap-2">
                                         <button onClick={() => openEdit(item)} className="text-charcoal/40 hover:text-primary"><Pencil size={14} /></button>
                                         <button onClick={() => handleDelete(item.id)} className="text-charcoal/40 hover:text-red-500"><Trash2 size={14} /></button>
@@ -194,8 +238,24 @@ const AdminMenuItems = () => {
                                     <input type="number" value={form.calories} onChange={(e) => setForm({ ...form, calories: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary outline-none text-sm" />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-charcoal mb-1">Image URL</label>
-                                    <input type="text" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary outline-none text-sm" />
+                                    <label className="block text-xs font-medium text-charcoal mb-1">Image</label>
+                                    <div className="space-y-2">
+                                        {form.image_url && (
+                                            <img src={form.image_url} alt="Preview" className="w-full h-24 object-cover rounded-lg" />
+                                        )}
+                                        <label className="block cursor-pointer bg-gray-100 hover:bg-gray-200 text-charcoal text-xs font-medium py-2 rounded-lg text-center transition-colors">
+                                            {uploading ? "Uploading..." : "📷 Upload Image"}
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                capture="environment"
+                                                onChange={handleImageUpload}
+                                                disabled={uploading}
+                                                className="hidden"
+                                            />
+                                        </label>
+                                        <input type="text" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary outline-none text-sm" placeholder="Or paste URL" />
+                                    </div>
                                 </div>
                                 <div className="col-span-2">
                                     <label className="block text-xs font-medium text-charcoal mb-1">Description</label>
@@ -215,10 +275,10 @@ const AdminMenuItems = () => {
                                                 <span className="w-3 h-3 border-2 border-red-600 rounded-sm flex items-center justify-center"><span className="w-1.5 h-1.5 bg-red-600 rounded-full"></span></span>
                                                 Non-Veg
                                             </label>
-                                            <label className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border cursor-pointer text-sm ${form.food_type === "both" ? "border-amber-500 bg-amber-50 text-amber-700" : "border-gray-200 text-charcoal/60"}`}>
+                                            <label className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border cursor-pointer text-sm ${form.food_type === "both" ? "border-amber-500 bg-gradient-to-r from-green-50 to-red-50 text-charcoal" : "border-gray-200 text-charcoal/60"}`}>
                                                 <input type="radio" name="food_type" value="both" checked={form.food_type === "both"} onChange={(e) => setForm({ ...form, food_type: e.target.value })} className="hidden" />
-                                                <span className="w-3 h-3 border-2 border-amber-600 rounded-sm flex items-center justify-center"><span className="w-1.5 h-1.5 bg-amber-600 rounded-full"></span></span>
-                                                Both
+                                                <span className="w-3.5 h-3.5 border rounded-sm flex overflow-hidden"><span className="w-1/2 bg-green-600"></span><span className="w-1/2 bg-red-600"></span></span>
+                                                Veg/Non-Veg
                                             </label>
                                         </div>
                                     </div>

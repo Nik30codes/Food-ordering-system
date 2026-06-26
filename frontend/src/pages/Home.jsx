@@ -1,7 +1,22 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { ArrowRight, Users, Star, ChefHat, Leaf, Clock, Sparkles } from "lucide-react";
+import SplitText from "../components/SplitText.jsx";
+import api from "../services/api.js";
 
 const Home = () => {
+    const [featuredItems, setFeaturedItems] = useState([]);
+
+    useEffect(() => {
+        const fetchFeatured = async () => {
+            try {
+                const res = await api.get("/api/menu/featured");
+                setFeaturedItems(res.data.featured_items || []);
+            } catch { }
+        };
+        fetchFeatured();
+    }, []);
+
     return (
         <div className="bg-cream">
             {/* Hero Section */}
@@ -10,8 +25,34 @@ const Home = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                         <div>
                             <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight">
-                                Experience Fine{" "}
-                                <span className="text-accent">Dining</span> Like Never Before
+                                <SplitText
+                                    text="Experience Fine"
+                                    tag="span"
+                                    className="text-4xl md:text-6xl font-bold text-white block"
+                                    delay={40}
+                                    duration={0.6}
+                                    ease="power3.out"
+                                    splitType="chars"
+                                    from={{ opacity: 0, y: 50 }}
+                                    to={{ opacity: 1, y: 0 }}
+                                    threshold={0.1}
+                                    rootMargin="-50px"
+                                    textAlign="left"
+                                />
+                                <SplitText
+                                    text="Dining Like Never Before"
+                                    tag="span"
+                                    className="text-4xl md:text-6xl font-bold text-accent block"
+                                    delay={40}
+                                    duration={0.6}
+                                    ease="power3.out"
+                                    splitType="chars"
+                                    from={{ opacity: 0, y: 50 }}
+                                    to={{ opacity: 1, y: 0 }}
+                                    threshold={0.1}
+                                    rootMargin="-50px"
+                                    textAlign="left"
+                                />
                             </h1>
                             <p className="text-white/70 mt-6 text-lg">
                                 Fresh ingredients, unforgettable taste, premium ambiance. Order your favorite meals with just a few clicks.
@@ -78,27 +119,56 @@ const Home = () => {
                             Popular Menu
                         </span>
                         <h2 className="text-3xl md:text-4xl font-bold text-charcoal mt-4">
-                            Discover our chef's most loved<br />and trending dishes.
+                            <SplitText
+                                text="Discover our chef's most loved and trending dishes."
+                                tag="span"
+                                className="text-3xl md:text-4xl font-bold text-charcoal"
+                                delay={30}
+                                duration={0.5}
+                                ease="power2.out"
+                                splitType="words"
+                                from={{ opacity: 0, y: 30 }}
+                                to={{ opacity: 1, y: 0 }}
+                                threshold={0.2}
+                                rootMargin="-50px"
+                                textAlign="center"
+                            />
                         </h2>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        {[
-                            { name: "Truffle Mushroom Pizza", icon: "🍕" },
-                            { name: "Classic Cheese Burger", icon: "🍔" },
-                            { name: "Sushi Deluxe Platter", icon: "🍣" },
-                            { name: "Creamy Alfredo Pasta", icon: "🍝" },
-                        ].map((item, index) => (
-                            <div
-                                key={index}
-                                className={`rounded-2xl p-6 text-center transition-all hover:scale-105 cursor-pointer ${index === 1 ? "bg-primary text-white" : "bg-white shadow-md"
-                                    }`}
-                            >
-                                <div className="text-5xl mb-4">{item.icon}</div>
-                                <p className={`font-medium text-sm ${index === 1 ? "text-white" : "text-charcoal"}`}>
-                                    {item.name}
-                                </p>
-                            </div>
-                        ))}
+                        {featuredItems.length > 0 ? (
+                            featuredItems.slice(0, 4).map((item, index) => (
+                                <Link
+                                    to="/menu"
+                                    key={item.id}
+                                    className={`rounded-2xl p-6 text-center transition-all hover:scale-105 cursor-pointer ${index === 1 ? "bg-primary text-white" : "bg-white shadow-md"}`}
+                                >
+                                    <div className="h-16 flex items-center justify-center mb-4">
+                                        {item.image_url ? (
+                                            <img src={item.image_url} alt={item.name} className="h-16 w-16 object-cover rounded-full" />
+                                        ) : (
+                                            <span className="text-5xl">🍽️</span>
+                                        )}
+                                    </div>
+                                    <p className={`font-medium text-sm ${index === 1 ? "text-white" : "text-charcoal"}`}>
+                                        {item.name}
+                                    </p>
+                                    <p className={`text-xs mt-1 ${index === 1 ? "text-white/60" : "text-accent font-semibold"}`}>
+                                        ₹{item.discount_price || item.price}
+                                    </p>
+                                </Link>
+                            ))
+                        ) : (
+                            [{name: "Truffle Mushroom Pizza", icon: "🍕"}, {name: "Classic Cheese Burger", icon: "🍔"}, {name: "Sushi Deluxe Platter", icon: "🍣"}, {name: "Creamy Alfredo Pasta", icon: "🍝"}].map((item, index) => (
+                                <div
+                                    key={index}
+                                    className={`rounded-2xl p-6 text-center transition-all hover:scale-105 cursor-pointer ${index === 1 ? "bg-primary text-white" : "bg-white shadow-md"}`}
+                                >
+                                    <div className="text-5xl mb-4">{item.icon}</div>
+                                    <p className={`font-medium text-sm ${index === 1 ? "text-white" : "text-charcoal"}`}>{item.name}</p>
+                                </div>
+                            ))
+                        )}
                     </div>
                     <div className="text-center mt-8">
                         <Link
@@ -114,7 +184,22 @@ const Home = () => {
             {/* Why Choose Us */}
             <section className="bg-charcoal py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <h2 className="text-3xl font-bold text-white text-center mb-12">Why With Us?</h2>
+                    <h2 className="text-3xl font-bold text-white text-center mb-12">
+                        <SplitText
+                            text="Why With Us?"
+                            tag="span"
+                            className="text-3xl font-bold text-white"
+                            delay={60}
+                            duration={0.5}
+                            ease="power3.out"
+                            splitType="chars"
+                            from={{ opacity: 0, y: 30 }}
+                            to={{ opacity: 1, y: 0 }}
+                            threshold={0.2}
+                            rootMargin="-50px"
+                            textAlign="center"
+                        />
+                    </h2>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         {[
                             { icon: <Leaf size={28} />, title: "Fresh Ingredients", desc: "Locally sourced, organic produce" },
@@ -156,7 +241,20 @@ const Home = () => {
             <section className="py-16 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <h2 className="text-3xl font-bold text-charcoal text-center mb-12">
-                        WHAT PEOPLE ARE SAYING...
+                        <SplitText
+                            text="WHAT PEOPLE ARE SAYING..."
+                            tag="span"
+                            className="text-3xl font-bold text-charcoal"
+                            delay={40}
+                            duration={0.5}
+                            ease="power2.out"
+                            splitType="chars"
+                            from={{ opacity: 0, y: 20 }}
+                            to={{ opacity: 1, y: 0 }}
+                            threshold={0.2}
+                            rootMargin="-50px"
+                            textAlign="center"
+                        />
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {[

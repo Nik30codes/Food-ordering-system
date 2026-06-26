@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Clock, CheckCircle, XCircle, ChefHat } from "lucide-react";
 import api from "../../services/api.js";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const statusOptions = ["pending", "accepted", "preparing", "ready", "completed", "cancelled"];
 
@@ -39,10 +39,10 @@ const AdminOrders = () => {
     const updateStatus = async (orderId, newStatus) => {
         try {
             await api.put(`/api/admin/orders/${orderId}/status`, { status: newStatus });
-            toast.success(`Order #${orderId} → ${newStatus}`);
+            toast.success(`Order #${orderId} updated to ${newStatus}`);
             fetchOrders();
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to update status");
+            toast.error("Couldn't update order status, try again");
         }
     };
 
@@ -93,7 +93,25 @@ const AdminOrders = () => {
                                     </div>
                                     <p className="text-charcoal/50 text-sm mt-1">
                                         {order.customer_name || "Customer"} • ₹{order.total_amount}
+                                        {order.payment && (
+                                            <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${order.payment.payment_status === 'completed' ? 'bg-green-100 text-green-700' : order.payment.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                                                {order.payment.payment_status === 'completed' ? '💳 Paid' : order.payment.payment_status === 'pending' ? '⏳ Payment Pending' : '❌ ' + order.payment.payment_status}
+                                            </span>
+                                        )}
+                                        {!order.payment && (
+                                            <span className="ml-2 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">No payment</span>
+                                        )}
                                     </p>
+                                    {order.items && order.items.length > 0 && (
+                                        <p className="text-charcoal/60 text-xs mt-1">
+                                            {order.items.map((item, idx) => (
+                                                <span key={idx}>
+                                                    {item.name || `Item #${item.menu_item_id}`} × {item.quantity}
+                                                    {idx < order.items.length - 1 ? " | " : ""}
+                                                </span>
+                                            ))}
+                                        </p>
+                                    )}
                                     <p className="text-charcoal/40 text-xs mt-1">
                                         {new Date(order.created_at).toLocaleString("en-IN")}
                                     </p>

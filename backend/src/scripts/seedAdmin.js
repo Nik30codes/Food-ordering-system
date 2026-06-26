@@ -43,8 +43,13 @@ async function seedAdmin() {
         }
 
         // Create owner admin user
-        const adminEmail = "admin@akio.com";
-        const adminPassword = "Admin@123";
+        const adminEmail = process.env.ADMIN_EMAIL;
+        const adminPassword = process.env.ADMIN_PASSWORD;
+
+        if (!adminEmail || !adminPassword) {
+            console.error("❌ ADMIN_EMAIL and ADMIN_PASSWORD must be set in .env");
+            process.exit(1);
+        }
 
         // Check if admin already exists
         const existingAdmin = await pool.query("SELECT id FROM admin_users WHERE email = $1", [adminEmail]);
@@ -69,7 +74,7 @@ async function seedAdmin() {
         console.log("   Email:", adminEmail);
         console.log("   Password:", adminPassword);
         console.log("\n🔗 Login endpoint: POST http://localhost:5000/api/admin/auth/login");
-        console.log('   Body: { "email": "admin@akio.com", "password": "Admin@123" }');
+        console.log('   Body: { "email": "<ADMIN_EMAIL>", "password": "<ADMIN_PASSWORD>" }');
     } catch (error) {
         console.error("❌ Error:", error.message);
     } finally {
