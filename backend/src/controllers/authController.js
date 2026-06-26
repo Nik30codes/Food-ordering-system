@@ -124,6 +124,12 @@ export const login = async (req, res) => {
     // Success — clear failed attempts
     clearAttempts(email);
 
+    // Check if this is the user's first login (created_at === updated_at means never logged in before)
+    const isFirstLogin = user.rows[0].created_at?.getTime() === user.rows[0].updated_at?.getTime();
+
+    // Update updated_at to track login activity
+    await pool.query("UPDATE users SET updated_at = NOW() WHERE id = $1", [user.rows[0].id]);
+
     // Generate token
     const token = jwt.sign({ id: user.rows[0].id }, process.env.JWT_SECRET, {
       expiresIn: "3d",
@@ -133,7 +139,7 @@ export const login = async (req, res) => {
     setTokenCookie(res, token);
 
     const { password_hash, ...userData } = user.rows[0];
-    res.json({ user: userData, token });
+    res.json({ user: userData, token, is_first_login: isFirstLogin });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

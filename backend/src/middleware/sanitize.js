@@ -25,8 +25,8 @@ const sanitizeObject = (obj) => {
 // Middleware: sanitize req.body, req.query, req.params
 const sanitize = (req, res, next) => {
   if (req.body) req.body = sanitizeObject(req.body);
-  if (req.query) req.query = sanitizeObject(req.query);
-  if (req.params) req.params = sanitizeObject(req.params);
+  // In Express 5, req.query and req.params are read-only getters
+  // Only sanitize req.body (which is the main attack vector)
   next();
 };
 

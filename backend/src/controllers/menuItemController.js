@@ -85,12 +85,13 @@ export const createMenuItem = async (req, res) => {
         }
 
         const newItem = await pool.query(
-            `INSERT INTO menu_items (restaurant_id, category_id, name, description, price, discount_price, image_url, is_veg, is_available, preparation_time, calories, display_order, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
+            `INSERT INTO menu_items (restaurant_id, category_id, name, description, price, discount_price, image_url, is_veg, food_type, is_available, preparation_time, calories, display_order, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
        RETURNING *`,
             [
                 restaurantId, category_id, name, description || null, price,
                 discount_price || null, image_url || null, is_veg || false,
+                req.body.food_type || (is_veg ? "veg" : "non-veg"),
                 is_available !== false, preparation_time || null, calories || null,
                 display_order || 0,
             ]
