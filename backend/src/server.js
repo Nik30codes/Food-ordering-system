@@ -17,6 +17,13 @@ import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import adminAuthRoutes from "./routes/adminAuthRoutes.js";
+import adminRestaurantRoutes from "./routes/adminRestaurantRoutes.js";
+import adminCategoryRoutes from "./routes/adminCategoryRoutes.js";
+import adminMenuItemRoutes from "./routes/adminMenuItemRoutes.js";
+import adminTableRoutes from "./routes/adminTableRoutes.js";
+import adminOrderRoutes from "./routes/adminOrderRoutes.js";
+import adminAnalyticsRoutes from "./routes/adminAnalyticsRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -42,12 +49,21 @@ app.use(hpp()); // Prevent HTTP Parameter Pollution
 app.use(sanitize); // Strip HTML/scripts from all inputs
 app.use("/api", apiLimiter); // General rate limit on all API routes
 
-// Routes
+// Routes — Customer side
 app.use("/api/auth", authRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/payments", paymentRoutes);
+
+// Routes — Admin side
+app.use("/api/admin/auth", adminAuthRoutes);
+app.use("/api/admin/restaurant", adminRestaurantRoutes);
+app.use("/api/admin/categories", adminCategoryRoutes);
+app.use("/api/admin/menu-items", adminMenuItemRoutes);
+app.use("/api/admin/tables", adminTableRoutes);
+app.use("/api/admin/orders", adminOrderRoutes);
+app.use("/api/admin/analytics", adminAnalyticsRoutes);
 
 // Health check route
 app.get("/", (req, res) => {

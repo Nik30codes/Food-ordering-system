@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS restaurant_tables (
+  id SERIAL PRIMARY KEY,
+  restaurant_id INTEGER NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+  table_number INTEGER NOT NULL,
+  table_name VARCHAR(100),
+  qr_code_url TEXT,
+  capacity INTEGER,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS order_status_history (
+  id SERIAL PRIMARY KEY,
+  order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  status VARCHAR(30) NOT NULL,
+  changed_by VARCHAR(100),
+  remarks TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
