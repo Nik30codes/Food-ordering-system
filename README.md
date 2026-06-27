@@ -184,4 +184,4 @@ See `backend/.env.example` for all required variables:
 ## Team
 
 - **Customer side (Backend + Frontend):** Nikunj
-- **Admin side:** Bhavya
+- **Admin side  (Backend + Frontend):** Bhavya
