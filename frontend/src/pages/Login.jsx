@@ -4,6 +4,7 @@ import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { loginUser } from "../services/authService.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { toast } from "sonner";
+import SmoothInput from "../components/SmoothInput.jsx";
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -23,11 +24,12 @@ const Login = () => {
             const data = await loginUser(email, password);
             login(data.user);
             if (data.is_first_login) {
+                localStorage.setItem('akio_show_onboarding', 'true');
                 toast.success(`Welcome, ${data.user.name}!`);
             } else {
                 toast.success(`Welcome back, ${data.user.name}!`);
             }
-            navigate("/menu");
+            navigate("/");
         } catch (err) {
             const msg = err.response?.data?.message || "";
             if (msg.includes("Invalid email or password")) {
@@ -65,32 +67,26 @@ const Login = () => {
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-charcoal mb-1">
-                                Email
-                            </label>
-                            <input
+                            <SmoothInput
                                 id="email"
                                 type="email"
                                 value={email}
                                 onChange={(e) => { setEmail(e.target.value); setError(""); }}
                                 required
-                                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                                placeholder="you@example.com"
+                                label="Email"
+                                placeholder="yourname@email.com"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-charcoal mb-1">
-                                Password
-                            </label>
                             <div className="relative">
-                                <input
+                                <SmoothInput
                                     id="password"
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => { setPassword(e.target.value); setError(""); }}
                                     required
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all pr-12"
+                                    label="Password"
                                     placeholder="••••••••"
                                 />
                                 <button

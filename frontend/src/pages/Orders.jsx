@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Package, Clock, CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import { getOrders, cancelOrder } from "../services/orderService.js";
 import { toast } from "sonner";
+import Counter from "../components/Counter.jsx";
 
 const statusConfig = {
     pending: { color: "bg-yellow-100 text-yellow-700", icon: Clock, label: "Pending" },
@@ -109,7 +110,7 @@ const Orders = () => {
                                             )}
                                         </div>
                                         <div className="flex items-center gap-4">
-                                            <span className="text-lg font-bold text-primary">₹{order.total_amount}</span>
+                                            <span className="text-lg font-bold text-primary">₹<Counter value={Math.round(parseFloat(order.total_amount))} fontSize={18} textColor="#1a3c34" fontWeight={700} /></span>
                                             {order.status === "pending" && (
                                                 <button
                                                     onClick={() => handleCancel(order.id)}

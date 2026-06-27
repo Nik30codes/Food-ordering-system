@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, X, Leaf } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Leaf, FolderOpen } from "lucide-react";
 import api from "../../services/api.js";
 import { toast } from "sonner";
 
@@ -7,6 +7,7 @@ const AdminMenuItems = () => {
     const [items, setItems] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [categoryFilter, setCategoryFilter] = useState("");
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -128,11 +129,30 @@ const AdminMenuItems = () => {
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
                 <h1 className="text-2xl font-bold text-charcoal">Menu Items</h1>
                 <button onClick={openCreate} className="bg-accent hover:bg-accent-dark text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 text-sm transition-colors">
                     <Plus size={16} /> Add Item
                 </button>
+            </div>
+
+            {/* Category filter */}
+            <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
+                <button
+                    onClick={() => setCategoryFilter("")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${!categoryFilter ? "bg-primary text-white" : "bg-white text-charcoal border border-gray-200 hover:border-primary"}`}
+                >
+                    <FolderOpen size={14} /> All
+                </button>
+                {categories.map((cat) => (
+                    <button
+                        key={cat.id}
+                        onClick={() => setCategoryFilter(cat.id)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${categoryFilter === cat.id ? "bg-primary text-white" : "bg-white text-charcoal border border-gray-200 hover:border-primary"}`}
+                    >
+                        <FolderOpen size={14} /> {cat.name}
+                    </button>
+                ))}
             </div>
 
             {loading ? (
@@ -144,55 +164,67 @@ const AdminMenuItems = () => {
                     <p className="text-charcoal/50">No menu items yet. Add your first dish!</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {items.map((item) => (
-                        <div key={item.id} className="bg-white rounded-xl overflow-hidden shadow-sm">
-                            <div className="h-32 bg-primary-light/10 flex items-center justify-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                    {items.filter(item => !categoryFilter || item.category_id === categoryFilter).map((item) => (
+                        <div key={item.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all group">
+                            {/* Image */}
+                            <div className="h-40 bg-cream relative overflow-hidden flex items-center justify-center p-4">
                                 {item.image_url ? (
-                                    <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                                    <img src={item.image_url} alt={item.name} className="h-full w-auto object-contain group-hover:scale-105 transition-transform duration-300" />
                                 ) : (
-                                    <span className="text-4xl">🍽️</span>
+                                    <span className="text-5xl">🍽️</span>
+                                )}
+                                {/* Food type badge */}
+                                <div className="absolute top-3 left-3">
+                                    {item.is_veg ? (
+                                        <span className="w-4 h-4 border-2 border-green-600 rounded-sm flex items-center justify-center"><span className="w-2 h-2 bg-green-600 rounded-full"></span></span>
+                                    ) : (
+                                        <span className="w-4 h-4 border-2 border-red-600 rounded-sm flex items-center justify-center"><span className="w-2 h-2 bg-red-600 rounded-full"></span></span>
+                                    )}
+                                </div>
+                                {/* Featured badge */}
+                                {item.is_featured && (
+                                    <span className="absolute top-3 right-3 bg-accent text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium">Featured</span>
                                 )}
                             </div>
+
+                            {/* Info */}
                             <div className="p-4">
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <h3 className="font-semibold text-charcoal flex items-center gap-1">
-                                            {item.name}
-                                            {item.food_type === "both" ? (
-                                                <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 bg-gradient-to-r from-green-50 to-red-50 border border-gray-200 text-[10px] rounded font-medium text-charcoal/70">
-                                                    <span className="w-2.5 h-2.5 rounded-sm flex overflow-hidden"><span className="w-1/2 bg-green-600"></span><span className="w-1/2 bg-red-600"></span></span>
-                                                    Veg/Non-Veg
-                                                </span>
-                                            ) : item.is_veg ? (
-                                                <Leaf size={14} className="text-green-500" />
-                                            ) : (
-                                                <span className="w-3 h-3 border-2 border-red-600 rounded-sm inline-flex items-center justify-center ml-1"><span className="w-1.5 h-1.5 bg-red-600 rounded-full"></span></span>
-                                            )}
-                                        </h3>
-                                        <p className="text-charcoal/50 text-xs">{item.category_name}</p>
-                                    </div>
-                                    <p className="font-bold text-primary">₹{item.price}</p>
-                                </div>
+                                <p className="text-xs text-charcoal/40 font-medium">{item.category_name}</p>
+                                <h3 className="font-semibold text-charcoal mt-1 text-sm line-clamp-1">{item.name}</h3>
+
+                                {/* Price row */}
                                 <div className="flex items-center justify-between mt-3">
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => toggleAvailability(item.id)}
-                                            className={`px-2 py-1 rounded text-xs font-medium ${item.is_available ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
-                                        >
-                                            {item.is_available ? "Available" : "Unavailable"}
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-accent font-bold text-lg">₹{item.discount_price || item.price}</span>
+                                        {item.discount_price && parseFloat(item.discount_price) < parseFloat(item.price) && (
+                                            <span className="text-charcoal/30 text-xs line-through">₹{item.price}</span>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-1.5">
+                                        <button onClick={() => openEdit(item)} className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary hover:text-white text-primary transition-all">
+                                            <Pencil size={12} />
                                         </button>
-                                        <button
-                                            onClick={() => toggleFeatured(item.id)}
-                                            className={`px-2 py-1 rounded text-xs font-medium ${item.is_featured ? "bg-yellow-100 text-yellow-700" : "bg-gray-100 text-gray-500"}`}
-                                        >
-                                            {item.is_featured ? "⭐ Featured" : "☆ Feature"}
+                                        <button onClick={() => handleDelete(item.id)} className="w-7 h-7 rounded-full bg-red-50 flex items-center justify-center hover:bg-red-500 hover:text-white text-red-500 transition-all">
+                                            <Trash2 size={12} />
                                         </button>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => openEdit(item)} className="text-charcoal/40 hover:text-primary"><Pencil size={14} /></button>
-                                        <button onClick={() => handleDelete(item.id)} className="text-charcoal/40 hover:text-red-500"><Trash2 size={14} /></button>
-                                    </div>
+                                </div>
+
+                                {/* Status toggles */}
+                                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                                    <button
+                                        onClick={() => toggleAvailability(item.id)}
+                                        className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium text-center transition-all ${item.is_available ? "bg-green-50 text-green-700 hover:bg-green-100" : "bg-red-50 text-red-600 hover:bg-red-100"}`}
+                                    >
+                                        {item.is_available ? "Available" : "Unavailable"}
+                                    </button>
+                                    <button
+                                        onClick={() => toggleFeatured(item.id)}
+                                        className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium text-center transition-all ${item.is_featured ? "bg-amber-50 text-amber-700 hover:bg-amber-100" : "bg-gray-50 text-gray-500 hover:bg-gray-100"}`}
+                                    >
+                                        {item.is_featured ? "★ Featured" : "☆ Feature"}
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -274,11 +306,6 @@ const AdminMenuItems = () => {
                                                 <input type="radio" name="food_type" value="non-veg" checked={form.food_type === "non-veg"} onChange={(e) => setForm({ ...form, food_type: e.target.value })} className="hidden" />
                                                 <span className="w-3 h-3 border-2 border-red-600 rounded-sm flex items-center justify-center"><span className="w-1.5 h-1.5 bg-red-600 rounded-full"></span></span>
                                                 Non-Veg
-                                            </label>
-                                            <label className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border cursor-pointer text-sm ${form.food_type === "both" ? "border-amber-500 bg-gradient-to-r from-green-50 to-red-50 text-charcoal" : "border-gray-200 text-charcoal/60"}`}>
-                                                <input type="radio" name="food_type" value="both" checked={form.food_type === "both"} onChange={(e) => setForm({ ...form, food_type: e.target.value })} className="hidden" />
-                                                <span className="w-3.5 h-3.5 border rounded-sm flex overflow-hidden"><span className="w-1/2 bg-green-600"></span><span className="w-1/2 bg-red-600"></span></span>
-                                                Veg/Non-Veg
                                             </label>
                                         </div>
                                     </div>

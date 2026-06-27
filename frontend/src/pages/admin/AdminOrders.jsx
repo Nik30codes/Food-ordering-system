@@ -93,6 +93,11 @@ const AdminOrders = () => {
                                     </div>
                                     <p className="text-charcoal/50 text-sm mt-1">
                                         {order.customer_name || "Customer"} • ₹{order.total_amount}
+                                        {order.customer_since && (
+                                            <span className="ml-2 text-xs text-charcoal/40">
+                                                Member since {new Date(order.customer_since).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
+                                            </span>
+                                        )}
                                         {order.payment && (
                                             <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${order.payment.payment_status === 'completed' ? 'bg-green-100 text-green-700' : order.payment.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
                                                 {order.payment.payment_status === 'completed' ? '💳 Paid' : order.payment.payment_status === 'pending' ? '⏳ Payment Pending' : '❌ ' + order.payment.payment_status}

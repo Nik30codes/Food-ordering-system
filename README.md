@@ -36,25 +36,37 @@ A full-stack food ordering application with customer-facing frontend, admin pane
 
 ### Customer Side
 - User registration & login with JWT
-- Browse menu by categories
-- Search with live suggestions (autocomplete)
+- New user onboarding stepper (guided tour)
+- Browse menu by categories with "View All" option
+- Search with live autocomplete suggestions
 - Item detail modal with quantity selector
-- Veg/Non-Veg food type choice for dual-type items
-- Cart with bill summary & discount display
-- Razorpay payment integration
-- Order history with payment details
+- Veg/Non-Veg food type indicators and filters
+- Cart with animated counter, bill summary & discount display
+- Razorpay payment integration with success animation (Lottie)
+- Order history with item details and payment info
 - Order cancellation (restores cart)
-- Profile management & password change
+- Profile management & password change with ProfileCard
+- Animated UI components (GSAP SplitText, AnimatedList, MagicBento cards, Counter)
+- Mobile dock navigation + CardNav hamburger menu
+- Desktop PillNav with animated hover effects
+- Responsive design for all screen sizes
 
 ### Admin Side
 - Separate admin authentication with role-based access
 - Menu item CRUD (create, edit, delete, toggle availability)
 - Featured items toggle (controls home page popular section)
-- Category management
+- Category management with filtering
 - Restaurant table management
-- Order management with status flow (pending → accepted → preparing → ready → completed)
+- Order management with full status flow (pending → accepted → preparing → ready → completed)
+- Admin cancel triggers automatic Razorpay refund
 - Payment status visibility per order
-- Analytics dashboard
+- Analytics dashboard with:
+  - Revenue line chart (7/30 day trends)
+  - Popular items bar chart
+  - Payment breakdown pie chart
+  - Clickable monthly revenue calendar
+  - Daily revenue cards
+  - Accurate date-filtered stats (only counts accepted orders)
 - Image upload via Cloudinary
 
 ### Security (18 layers)

@@ -1,0 +1,194 @@
+.pill-nav-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99;
+  padding: 0.75rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(to bottom, rgba(253, 246, 233, 0.97) 60%, transparent);
+}
+
+@media (max-width: 768px) {
+  .pill-nav-wrapper {
+    display: none;
+  }
+}
+
+/* Left - Logo */
+.pill-nav-logo {
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.pill-nav-logo-text {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1a3c34;
+}
+
+.pill-nav-logo-accent {
+  color: #e87a2e;
+}
+
+/* Center - Pill bar */
+.pill-bar {
+  --nav-h: 46px;
+  --pill-pad-x: 20px;
+  --pill-gap: 3px;
+  display: flex;
+  align-items: center;
+  height: var(--nav-h);
+  background: #1a3c34;
+  border-radius: 9999px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.pill-list {
+  list-style: none;
+  display: flex;
+  align-items: stretch;
+  gap: var(--pill-gap);
+  margin: 0;
+  padding: 3px;
+  height: 100%;
+}
+
+.pill-list > li {
+  display: flex;
+  height: 100%;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 var(--pill-pad-x);
+  background: #2d5c4f;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 9999px;
+  box-sizing: border-box;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 0;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.2s ease;
+}
+
+.pill:hover {
+  background: #1a3c34;
+}
+
+.pill .hover-circle {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  border-radius: 50%;
+  background: #1a3c34;
+  z-index: 1;
+  display: block;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.pill .label-stack {
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+  z-index: 2;
+}
+
+.pill .pill-label {
+  position: relative;
+  z-index: 2;
+  display: inline-block;
+  line-height: 1;
+  will-change: transform;
+}
+
+.pill .pill-label-hover {
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #e87a2e;
+  z-index: 3;
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+.pill.is-active {
+  background: #0f2620;
+  color: #e87a2e;
+}
+
+/* Right - Action buttons */
+.pill-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pill-action-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #1a3c34;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  position: relative;
+  transition: background 0.2s ease;
+  text-decoration: none;
+}
+
+.pill-action-btn:hover {
+  background: #2d5c4f;
+}
+
+.pill-action-badge {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  background: #e87a2e;
+  color: white;
+  font-size: 9px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.pill-login-btn {
+  background: #e87a2e;
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  padding: 0 1.2rem;
+  height: 40px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s ease;
+}
+
+.pill-login-btn:hover {
+  background: #c55f1a;
+}

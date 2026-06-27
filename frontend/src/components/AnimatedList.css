@@ -1,0 +1,76 @@
+.scroll-list-container {
+  position: relative;
+  width: 100%;
+}
+
+.scroll-list {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.scroll-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scroll-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-list::-webkit-scrollbar-thumb {
+  background: #1a3c34;
+  border-radius: 4px;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.animated-list-item {
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+
+.animated-list-item.selected {
+  box-shadow: 0 0 0 2px #e87a2e;
+}
+
+.top-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, #fdf6e9, transparent);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 5;
+}
+
+.bottom-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(to top, #fdf6e9, transparent);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 5;
+}
+
+@media (max-width: 640px) {
+  .scroll-list {
+    max-height: 60vh;
+    padding: 4px;
+  }
+
+  .scroll-list::-webkit-scrollbar {
+    display: none;
+  }
+}

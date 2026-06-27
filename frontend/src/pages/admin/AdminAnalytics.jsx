@@ -1,109 +1,262 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, ShoppingBag, DollarSign } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import {
+    LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+} from "recharts";
 import api from "../../services/api.js";
 
+const COLORS = ['#1a3c34', '#e87a2e', '#2d5c4f', '#c55f1a', '#0f2620'];
+
 const AdminAnalytics = () => {
-    const [daily, setDaily] = useState([]);
-    const [popular, setPopular] = useState([]);
-    const [revenue, setRevenue] = useState([]);
+    const [summary, setSummary] = useState(null);
+    const [dailyData, setDailyData] = useState([]);
+    const [popularItems, setPopularItems] = useState([]);
+    const [revenueBreakdown, setRevenueBreakdown] = useState([]);
+    const [selectedMonth, setSelectedMonth] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => { fetchAnalytics(); }, []);
+    useEffect(() => {
+        fetchAnalytics();
+    }, []);
 
     const fetchAnalytics = async () => {
         try {
-            const [dailyRes, popularRes, revenueRes] = await Promise.all([
-                api.get("/api/admin/analytics/daily?days=14"),
+            const [summaryRes, dailyRes, popularRes, revenueRes] = await Promise.all([
+                api.get("/api/admin/analytics/summary"),
+                api.get("/api/admin/analytics/daily?days=30"),
                 api.get("/api/admin/analytics/popular-items?limit=5"),
                 api.get("/api/admin/analytics/revenue"),
             ]);
-            setDaily(dailyRes.data.analytics || []);
-            setPopular(popularRes.data.popular_items || []);
-            setRevenue(revenueRes.data.revenue_breakdown || []);
-        } catch { } finally { setLoading(false); }
+            setSummary(summaryRes.data);
+            setDailyData(dailyRes.data.analytics || []);
+            setPopularItems(popularRes.data.popular_items || []);
+            setRevenueBreakdown(revenueRes.data.revenue_breakdown || []);
+        } catch { } finally {
+            setLoading(false);
+        }
     };
+
+    // Calendar helpers
+    const getDaysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    const getFirstDayOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+
+    const changeMonth = (dir) => {
+        const newDate = new Date(selectedMonth);
+        newDate.setMonth(newDate.getMonth() + dir);
+        setSelectedMonth(newDate);
+    };
+
+    const getRevenueForDate = (date) => {
+        const dateStr = date.toISOString().split('T')[0];
+        const day = dailyData.find(d => d.date?.startsWith(dateStr));
+        return day ? parseFloat(day.total_revenue) : 0;
+    };
+
+    const getOrdersForDate = (date) => {
+        const dateStr = date.toISOString().split('T')[0];
+        const day = dailyData.find(d => d.date?.startsWith(dateStr));
+        return day ? parseInt(day.total_orders) : 0;
+    };
+
+    // Chart data
+    const lineChartData = dailyData.map(d => ({
+        date: new Date(d.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
+        revenue: Math.round(parseFloat(d.total_revenue)),
+        orders: parseInt(d.total_orders),
+    })).reverse();
+
+    const pieData = revenueBreakdown.map(r => ({
+        name: r.payment_status,
+        value: Math.round(parseFloat(r.total_amount)),
+    }));
+
+    const barData = popularItems.map(item => ({
+        name: item.name.length > 12 ? item.name.substring(0, 12) + '...' : item.name,
+        quantity: parseInt(item.total_quantity),
+    }));
 
     if (loading) {
         return (
-            <div className="flex justify-center py-12">
-                <div className="w-8 h-8 border-4 border-primary border-t-accent rounded-full animate-spin"></div>
+            <div className="flex justify-center py-20">
+                <div className="w-10 h-10 border-4 border-primary border-t-accent rounded-full animate-spin"></div>
             </div>
         );
     }
+
+    // Calendar rendering
+    const daysInMonth = getDaysInMonth(selectedMonth);
+    const firstDay = getFirstDayOfMonth(selectedMonth);
+    const calendarDays = [];
+    for (let i = 0; i < firstDay; i++) calendarDays.push(null);
+    for (let i = 1; i <= daysInMonth; i++) calendarDays.push(i);
 
     return (
         <div>
             <h1 className="text-2xl font-bold text-charcoal mb-6">Analytics</h1>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Daily Revenue */}
-                <div className="bg-white rounded-xl p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold text-charcoal mb-4 flex items-center gap-2">
-                        <TrendingUp size={18} className="text-primary" /> Daily Revenue (14 days)
-                    </h2>
-                    {daily.length === 0 ? (
-                        <p className="text-charcoal/50 text-sm">No data yet</p>
+            {/* Summary cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                <div className="bg-white rounded-xl p-5 shadow-sm">
+                    <p className="text-charcoal/50 text-xs">This Month</p>
+                    <p className="text-2xl font-bold text-charcoal mt-1">₹{Math.round(parseFloat(summary?.this_month?.total_revenue || 0))}</p>
+                    <p className="text-xs text-charcoal/40 mt-1">{summary?.this_month?.total_orders || 0} orders</p>
+                </div>
+                <div className="bg-white rounded-xl p-5 shadow-sm">
+                    <p className="text-charcoal/50 text-xs">This Week</p>
+                    <p className="text-2xl font-bold text-charcoal mt-1">₹{Math.round(parseFloat(summary?.this_week?.total_revenue || 0))}</p>
+                    <p className="text-xs text-charcoal/40 mt-1">{summary?.this_week?.total_orders || 0} orders</p>
+                </div>
+                <div className="bg-white rounded-xl p-5 shadow-sm">
+                    <p className="text-charcoal/50 text-xs">Today</p>
+                    <p className="text-2xl font-bold text-primary mt-1">₹{Math.round(parseFloat(summary?.today?.total_revenue || 0))}</p>
+                    <p className="text-xs text-charcoal/40 mt-1">{summary?.today?.total_orders || 0} orders</p>
+                </div>
+            </div>
+
+            {/* Revenue Line Chart */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm mb-6">
+                <h2 className="text-lg font-semibold text-charcoal mb-4">Revenue Trend (30 Days)</h2>
+                {lineChartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={280}>
+                        <LineChart data={lineChartData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                            <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#999" />
+                            <YAxis tick={{ fontSize: 11 }} stroke="#999" />
+                            <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #eee' }} />
+                            <Line type="monotone" dataKey="revenue" stroke="#1a3c34" strokeWidth={2.5} dot={{ fill: '#e87a2e', r: 3 }} name="Revenue (₹)" />
+                            <Line type="monotone" dataKey="orders" stroke="#e87a2e" strokeWidth={1.5} strokeDasharray="4 4" dot={false} name="Orders" />
+                            <Legend />
+                        </LineChart>
+                    </ResponsiveContainer>
+                ) : (
+                    <p className="text-charcoal/40 text-center py-8">No data yet</p>
+                )}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {/* Popular Items Bar Chart */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm">
+                    <h2 className="text-lg font-semibold text-charcoal mb-4">Most Ordered Items</h2>
+                    {barData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={220}>
+                            <BarChart data={barData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="#999" />
+                                <YAxis tick={{ fontSize: 11 }} stroke="#999" />
+                                <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #eee' }} />
+                                <Bar dataKey="quantity" fill="#1a3c34" radius={[6, 6, 0, 0]} name="Times Ordered" />
+                            </BarChart>
+                        </ResponsiveContainer>
                     ) : (
-                        <div className="space-y-2">
-                            {daily.map((day) => (
-                                <div key={day.date} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                                    <span className="text-sm text-charcoal/60">
-                                        {new Date(day.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-                                    </span>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-xs text-charcoal/40">{day.total_orders} orders</span>
-                                        <span className="font-semibold text-primary text-sm">₹{parseFloat(day.total_revenue).toFixed(0)}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                        <p className="text-charcoal/40 text-center py-8">No data yet</p>
                     )}
                 </div>
 
-                {/* Popular Items */}
-                <div className="bg-white rounded-xl p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold text-charcoal mb-4 flex items-center gap-2">
-                        <ShoppingBag size={18} className="text-accent" /> Most Popular Items
-                    </h2>
-                    {popular.length === 0 ? (
-                        <p className="text-charcoal/50 text-sm">No data yet</p>
+                {/* Payment Pie Chart */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm">
+                    <h2 className="text-lg font-semibold text-charcoal mb-4">Payment Breakdown</h2>
+                    {pieData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={220}>
+                            <PieChart>
+                                <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                                    {pieData.map((_, idx) => (
+                                        <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip formatter={(value) => `₹${value}`} />
+                            </PieChart>
+                        </ResponsiveContainer>
                     ) : (
-                        <div className="space-y-3">
-                            {popular.map((item, i) => (
-                                <div key={item.id} className="flex items-center gap-3">
-                                    <span className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                                        {i + 1}
-                                    </span>
-                                    <div className="flex-1">
-                                        <p className="font-medium text-charcoal text-sm">{item.name}</p>
-                                        <p className="text-charcoal/40 text-xs">Ordered {item.total_quantity} times</p>
-                                    </div>
-                                    <span className="font-semibold text-primary text-sm">₹{item.price}</span>
-                                </div>
-                            ))}
-                        </div>
+                        <p className="text-charcoal/40 text-center py-8">No payment data yet</p>
                     )}
+                </div>
+            </div>
+
+            {/* Calendar Revenue View */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-charcoal flex items-center gap-2">
+                        <Calendar size={20} className="text-primary" />
+                        Monthly Revenue Calendar
+                    </h2>
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => changeMonth(-1)} className="p-1 hover:bg-cream rounded-lg transition-colors">
+                            <ChevronLeft size={20} className="text-charcoal" />
+                        </button>
+                        <span className="text-sm font-medium text-charcoal min-w-[120px] text-center">
+                            {selectedMonth.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+                        </span>
+                        <button onClick={() => changeMonth(1)} className="p-1 hover:bg-cream rounded-lg transition-colors">
+                            <ChevronRight size={20} className="text-charcoal" />
+                        </button>
+                    </div>
                 </div>
 
-                {/* Revenue Breakdown */}
-                <div className="bg-white rounded-xl p-6 shadow-sm lg:col-span-2">
-                    <h2 className="text-lg font-semibold text-charcoal mb-4 flex items-center gap-2">
-                        <DollarSign size={18} className="text-green-600" /> Revenue by Payment Status
-                    </h2>
-                    {revenue.length === 0 ? (
-                        <p className="text-charcoal/50 text-sm">No payment data yet</p>
-                    ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            {revenue.map((item) => (
-                                <div key={item.payment_status} className="bg-cream rounded-lg p-4 text-center">
-                                    <p className="text-charcoal/50 text-sm capitalize">{item.payment_status}</p>
-                                    <p className="text-2xl font-bold text-charcoal mt-1">₹{parseFloat(item.total_amount).toFixed(0)}</p>
-                                    <p className="text-charcoal/40 text-xs">{item.count} payments</p>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                {/* Day headers */}
+                <div className="grid grid-cols-7 gap-2 mb-2">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                        <div key={d} className="text-center text-xs font-medium text-charcoal/40 py-1">{d}</div>
+                    ))}
                 </div>
+
+                {/* Calendar grid */}
+                <div className="grid grid-cols-7 gap-2">
+                    {calendarDays.map((day, idx) => {
+                        if (!day) return <div key={idx} />;
+                        const date = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), day);
+                        const revenue = getRevenueForDate(date);
+                        const orders = getOrdersForDate(date);
+                        const isToday = date.toDateString() === new Date().toDateString();
+
+                        return (
+                            <div
+                                key={idx}
+                                onClick={() => {
+                                    if (revenue > 0 || isToday) setSelectedDate(date);
+                                }}
+                                className={`rounded-xl p-2 text-center min-h-[60px] flex flex-col justify-center cursor-pointer transition-all hover:ring-2 hover:ring-accent/30 ${isToday ? 'bg-primary text-white' : selectedDate?.toDateString() === date.toDateString() ? 'bg-accent/10 ring-2 ring-accent' : revenue > 0 ? 'bg-cream' : 'bg-gray-50'}`}
+                            >
+                                <p className={`text-xs font-medium ${isToday ? 'text-white/70' : 'text-charcoal/50'}`}>{day}</p>
+                                {revenue > 0 && (
+                                    <>
+                                        <p className={`text-xs font-bold mt-0.5 ${isToday ? 'text-white' : 'text-primary'}`}>₹{Math.round(revenue)}</p>
+                                        <p className={`text-[10px] ${isToday ? 'text-white/60' : 'text-charcoal/40'}`}>{orders}ord</p>
+                                    </>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Selected date detail */}
+                {selectedDate && (
+                    <div className="mt-4 p-4 bg-cream rounded-xl border border-accent/20">
+                        <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-semibold text-charcoal">
+                                {selectedDate.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                            </h3>
+                            <button onClick={() => setSelectedDate(null)} className="text-charcoal/40 hover:text-charcoal text-sm">✕</button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="text-center">
+                                <p className="text-2xl font-bold text-primary">₹{Math.round(getRevenueForDate(selectedDate))}</p>
+                                <p className="text-xs text-charcoal/50">Revenue</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-2xl font-bold text-charcoal">{getOrdersForDate(selectedDate)}</p>
+                                <p className="text-xs text-charcoal/50">Orders</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-2xl font-bold text-accent">
+                                    ₹{getOrdersForDate(selectedDate) > 0 ? Math.round(getRevenueForDate(selectedDate) / getOrdersForDate(selectedDate)) : 0}
+                                </p>
+                                <p className="text-xs text-charcoal/50">Avg Order</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

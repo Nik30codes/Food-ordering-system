@@ -1,0 +1,113 @@
+.bento-grid {
+  display: grid;
+  gap: 1.25rem;
+  padding: 0;
+  width: 100%;
+}
+
+.bento-grid--equal {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.magic-card {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  padding: 0;
+  border-radius: 20px;
+  border: 1px solid rgba(26, 60, 52, 0.1);
+  background: #ffffff;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  --glow-x: 50%;
+  --glow-y: 50%;
+  --glow-intensity: 0;
+  --glow-radius: 200px;
+}
+
+.magic-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 12px 30px rgba(26, 60, 52, 0.15),
+    0 0 20px rgba(26, 60, 52, 0.1);
+}
+
+.magic-card--border-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 4px;
+  background: radial-gradient(
+    var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+    rgba(var(--glow-color), calc(var(--glow-intensity) * 0.77)) 0%,
+    rgba(var(--glow-color), calc(var(--glow-intensity) * 0.47)) 25%,
+    transparent 55%
+  );
+  border-radius: inherit;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.magic-card--border-glow:hover {
+  border-color: rgba(26, 60, 52, 0.37);
+  box-shadow:
+    0 12px 30px rgba(26, 60, 52, 0.22),
+    0 0 25px rgba(26, 60, 52, 0.19),
+    inset 0 0 20px rgba(26, 60, 52, 0.05);
+}
+
+.magic-card .particle-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.magic-card .particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.bento-spotlight {
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+  z-index: 200 !important;
+  pointer-events: none;
+}
+
+.bento-section {
+  position: relative;
+  user-select: none;
+}
+
+@media (max-width: 640px) {
+  .bento-grid--equal {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  .bento-grid--equal {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .bento-grid--equal {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

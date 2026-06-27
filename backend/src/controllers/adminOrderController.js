@@ -1,4 +1,10 @@
 import pool from "../db/db.js";
+import Razorpay from "razorpay";
+
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 // GET /api/admin/orders — Get all orders for the restaurant
 export const getRestaurantOrders = async (req, res) => {
@@ -9,7 +15,7 @@ export const getRestaurantOrders = async (req, res) => {
         const status = req.query.status || null;
 
         let query = `
-      SELECT o.*, u.name as customer_name, u.phone as customer_phone
+      SELECT o.*, u.name as customer_name, u.phone as customer_phone, u.created_at as customer_since
       FROM orders o
       JOIN users u ON o.user_id = u.id
       WHERE o.restaurant_id = $1
@@ -143,6 +149,30 @@ export const updateOrderStatus = async (req, res) => {
             "INSERT INTO order_status_history (order_id, status, changed_by, remarks, created_at) VALUES ($1, $2, $3, $4, NOW())",
             [orderId, status, req.admin.name, remarks || null]
         );
+
+        // If cancelled, auto-refund the payment
+        if (status === "cancelled") {
+            const payment = await client.query(
+                "SELECT * FROM payments WHERE order_id = $1 AND payment_status = 'completed' ORDER BY created_at DESC LIMIT 1",
+                [orderId]
+            );
+
+            if (payment.rows.length > 0) {
+                const paymentId = payment.rows[0].transaction_id;
+                const amount = Math.round(parseFloat(payment.rows[0].amount) * 100); // paise
+
+                try {
+                    await razorpay.payments.refund(paymentId, { amount });
+                    await client.query(
+                        "UPDATE payments SET payment_status = 'refunded', updated_at = NOW() WHERE id = $1",
+                        [payment.rows[0].id]
+                    );
+                } catch (refundErr) {
+                    console.error("[REFUND ERROR]:", refundErr.message);
+                    // Still cancel the order even if refund fails — admin can manually refund
+                }
+            }
+        }
 
         await client.query("COMMIT");
 

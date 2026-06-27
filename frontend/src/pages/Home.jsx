@@ -2,12 +2,20 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ArrowRight, Users, Star, ChefHat, Leaf, Clock, Sparkles } from "lucide-react";
 import SplitText from "../components/SplitText.jsx";
+import Counter from "../components/Counter.jsx";
+import Onboarding from "../components/Onboarding.jsx";
 import api from "../services/api.js";
 
 const Home = () => {
     const [featuredItems, setFeaturedItems] = useState([]);
+    const [showOnboarding, setShowOnboarding] = useState(false);
 
     useEffect(() => {
+        // Check if onboarding should show
+        if (localStorage.getItem('akio_show_onboarding') === 'true') {
+            setShowOnboarding(true);
+        }
+
         const fetchFeatured = async () => {
             try {
                 const res = await api.get("/api/menu/featured");
@@ -17,8 +25,15 @@ const Home = () => {
         fetchFeatured();
     }, []);
 
+    const handleOnboardingComplete = () => {
+        setShowOnboarding(false);
+        localStorage.removeItem('akio_show_onboarding');
+    };
+
     return (
         <div className="bg-cream">
+            {/* Onboarding for new users */}
+            {showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
             {/* Hero Section */}
             <section className="bg-primary relative overflow-hidden">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
@@ -80,14 +95,18 @@ const Home = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <p className="text-white font-bold text-lg">10,000+</p>
+                                        <p className="text-white font-bold text-lg">
+                                          <Counter value={10000} fontSize={18} textColor="white" fontWeight={700} prefix="" />+
+                                        </p>
                                         <p className="text-white/60 text-xs">Happy Guests</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Star size={20} className="text-accent fill-accent" />
                                     <div>
-                                        <p className="text-white font-bold text-lg">4.9</p>
+                                        <p className="text-white font-bold text-lg">
+                                          <Counter value={4.9} fontSize={18} textColor="white" fontWeight={700} places={[1, '.', 0.1]} />
+                                        </p>
                                         <p className="text-white/60 text-xs">Rating</p>
                                     </div>
                                 </div>

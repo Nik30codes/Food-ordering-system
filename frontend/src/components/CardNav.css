@@ -1,0 +1,186 @@
+.card-nav-container {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 100%;
+  z-index: 99;
+  box-sizing: border-box;
+  padding: 0.75rem;
+}
+
+.card-nav {
+  display: block;
+  height: 60px;
+  padding: 0;
+  background-color: #1a3c34;
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+  will-change: height;
+}
+
+.card-nav-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  z-index: 2;
+}
+
+.hamburger-menu {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  gap: 5px;
+  padding: 8px;
+}
+
+.hamburger-menu:hover .hamburger-line {
+  opacity: 0.75;
+}
+
+.hamburger-line {
+  width: 22px;
+  height: 2px;
+  background-color: currentColor;
+  transition:
+    transform 0.25s ease,
+    opacity 0.2s ease,
+    margin 0.3s ease;
+  transform-origin: 50% 50%;
+  border-radius: 2px;
+}
+
+.hamburger-menu.open .hamburger-line:first-child {
+  transform: translateY(3.5px) rotate(45deg);
+}
+
+.hamburger-menu.open .hamburger-line:last-child {
+  transform: translateY(-3.5px) rotate(-45deg);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.card-nav-logo-text {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: white;
+}
+
+.card-nav-logo-accent {
+  color: #e87a2e;
+}
+
+.card-nav-cart-btn {
+  position: relative;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.card-nav-cart-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #e87a2e;
+  color: white;
+  font-size: 10px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.card-nav-content {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 60px;
+  bottom: 0;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.card-nav.open .card-nav-content {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.nav-card {
+  flex: 1 1 auto;
+  min-height: 56px;
+  border-radius: 12px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  gap: 12px;
+  user-select: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.nav-card:active {
+  opacity: 0.8;
+}
+
+.nav-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nav-card-info {
+  flex: 1;
+}
+
+.nav-card-label {
+  font-weight: 600;
+  font-size: 15px;
+  color: white;
+}
+
+.nav-card-desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 2px;
+}
+
+.nav-card-arrow {
+  color: rgba(255, 255, 255, 0.4);
+  flex-shrink: 0;
+}

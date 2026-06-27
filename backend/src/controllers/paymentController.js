@@ -109,11 +109,8 @@ export const verifyPayment = async (req, res) => {
       [razorpay_payment_id, order_id, razorpay_order_id]
     );
 
-    // Update order status to confirmed
-    await client.query(
-      "UPDATE orders SET status = 'confirmed', updated_at = NOW() WHERE id = $1",
-      [order_id]
-    );
+    // Order stays pending — admin will accept/confirm it manually
+    // Payment is recorded as completed but order status doesn't change
 
     await client.query("COMMIT");
 

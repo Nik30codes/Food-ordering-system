@@ -4,6 +4,7 @@ import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { registerUser } from "../services/authService.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { toast } from "sonner";
+import SmoothInput from "../components/SmoothInput.jsx";
 
 const Register = () => {
     const [name, setName] = useState("");
@@ -24,8 +25,9 @@ const Register = () => {
         try {
             const data = await registerUser(name, email, password, phone);
             login(data.user);
+            localStorage.setItem('akio_show_onboarding', 'true');
             toast.success("Account created! Welcome to Akio.");
-            navigate("/menu");
+            navigate("/");
         } catch (err) {
             const msg = err.response?.data?.message || "";
             if (msg.includes("Unable to create account") || msg.includes("different credentials")) {
@@ -81,14 +83,13 @@ const Register = () => {
                             <label htmlFor="name" className="block text-sm font-medium text-charcoal mb-1">
                                 Full Name
                             </label>
-                            <input
+                            <SmoothInput
                                 id="name"
                                 type="text"
                                 value={name}
                                 onChange={(e) => { setName(e.target.value); setError(""); }}
                                 required
-                                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                                placeholder="John Doe"
+                                placeholder="Your name"
                             />
                         </div>
 
@@ -96,13 +97,12 @@ const Register = () => {
                             <label htmlFor="email" className="block text-sm font-medium text-charcoal mb-1">
                                 Email
                             </label>
-                            <input
+                            <SmoothInput
                                 id="email"
                                 type="email"
                                 value={email}
                                 onChange={(e) => { setEmail(e.target.value); setError(""); }}
                                 required
-                                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                 placeholder="you@example.com"
                             />
                         </div>
@@ -111,14 +111,13 @@ const Register = () => {
                             <label htmlFor="phone" className="block text-sm font-medium text-charcoal mb-1">
                                 Phone Number
                             </label>
-                            <input
+                            <SmoothInput
                                 id="phone"
                                 type="tel"
                                 value={phone}
                                 onChange={(e) => { setPhone(e.target.value); setError(""); }}
                                 required
-                                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                                placeholder="9876543210"
+                                placeholder="7012XXXXXX"
                             />
                         </div>
 
@@ -127,14 +126,13 @@ const Register = () => {
                                 Password
                             </label>
                             <div className="relative">
-                                <input
+                                <SmoothInput
                                     id="password"
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => { setPassword(e.target.value); setError(""); }}
                                     required
                                     minLength={8}
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all pr-12"
                                     placeholder="Min 8 characters"
                                 />
                                 <button

@@ -1,0 +1,48 @@
+.smooth-input-wrapper {
+  width: 100%;
+}
+
+.smooth-input-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin-bottom: 0.375rem;
+}
+
+.smooth-input-container {
+  position: relative;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.smooth-input {
+  width: 100%;
+  background: transparent;
+  outline: none;
+  border: none;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  color: #1a1a1a;
+}
+
+.smooth-input::placeholder {
+  color: rgba(26, 26, 26, 0.35);
+}
+
+.smooth-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.smooth-input-underline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #1a3c34;
+  transform-origin: center;
+}

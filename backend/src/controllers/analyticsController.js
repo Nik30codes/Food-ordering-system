@@ -5,14 +5,14 @@ export const getAnalyticsSummary = async (req, res) => {
     try {
         const restaurantId = req.admin.restaurant_id;
 
-        // Today's stats
+        // Today's stats (only count accepted/completed orders, not pending/cancelled)
         const today = await pool.query(
             `SELECT
         COUNT(*) as total_orders,
         COALESCE(SUM(total_amount), 0) as total_revenue,
         COALESCE(AVG(total_amount), 0) as average_order_value
       FROM orders
-      WHERE restaurant_id = $1 AND DATE(created_at) = CURRENT_DATE AND status != 'cancelled'`,
+      WHERE restaurant_id = $1 AND DATE(created_at) = CURRENT_DATE AND status NOT IN ('pending', 'cancelled')`,
             [restaurantId]
         );
 
@@ -23,7 +23,7 @@ export const getAnalyticsSummary = async (req, res) => {
         COALESCE(SUM(total_amount), 0) as total_revenue,
         COALESCE(AVG(total_amount), 0) as average_order_value
       FROM orders
-      WHERE restaurant_id = $1 AND created_at >= CURRENT_DATE - INTERVAL '7 days' AND status != 'cancelled'`,
+      WHERE restaurant_id = $1 AND created_at >= CURRENT_DATE - INTERVAL '7 days' AND status NOT IN ('pending', 'cancelled')`,
             [restaurantId]
         );
 
@@ -34,7 +34,7 @@ export const getAnalyticsSummary = async (req, res) => {
         COALESCE(SUM(total_amount), 0) as total_revenue,
         COALESCE(AVG(total_amount), 0) as average_order_value
       FROM orders
-      WHERE restaurant_id = $1 AND created_at >= CURRENT_DATE - INTERVAL '30 days' AND status != 'cancelled'`,
+      WHERE restaurant_id = $1 AND created_at >= CURRENT_DATE - INTERVAL '30 days' AND status NOT IN ('pending', 'cancelled')`,
             [restaurantId]
         );
 
@@ -61,7 +61,7 @@ export const getDailyAnalytics = async (req, res) => {
         COALESCE(SUM(total_amount), 0) as total_revenue,
         COALESCE(AVG(total_amount), 0) as average_order_value
       FROM orders
-      WHERE restaurant_id = $1 AND created_at >= CURRENT_DATE - INTERVAL '1 day' * $2 AND status != 'cancelled'
+      WHERE restaurant_id = $1 AND created_at >= CURRENT_DATE - INTERVAL '1 day' * $2 AND status NOT IN ('pending', 'cancelled')
       GROUP BY DATE(created_at)
       ORDER BY date DESC`,
             [restaurantId, days]

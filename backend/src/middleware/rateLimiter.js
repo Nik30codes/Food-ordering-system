@@ -11,10 +11,10 @@ export const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// General API rate limiter — 200 requests per 15 minutes
+// General API rate limiter — 500 requests per 15 minutes
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: 500,
   message: {
     message: "Too many requests. Please slow down.",
   },

@@ -4,16 +4,20 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import api from "../services/api.js";
 import { toast } from "sonner";
+import AnimatedList from "../components/AnimatedList.jsx";
+import MagicBentoCard from "../components/MagicBentoCard.jsx";
+import Counter from "../components/Counter.jsx";
 
 const MenuPage = () => {
     const { user } = useAuth();
-    const { addToCart } = useCart();
+    const { addToCart, cartItems, updateItem, removeItem } = useCart();
     const [categories, setCategories] = useState([]);
     const [menuItems, setMenuItems] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [showSuggestions, setShowSuggestions] = useState(false);
-    const [foodTypeFilter, setFoodTypeFilter] = useState("all"); // "all", "veg", "nonveg"
+    const [foodTypeFilter, setFoodTypeFilter] = useState("all");
+    const [viewAll, setViewAll] = useState(false); // "all", "veg", "nonveg"
     const [loading, setLoading] = useState(true);
     const [addingItemId, setAddingItemId] = useState(null);
     const [selectedItem, setSelectedItem] = useState(null);
@@ -58,6 +62,40 @@ const MenuPage = () => {
         } finally {
             setAddingItemId(null);
         }
+    };
+
+    const getCartQuantity = (menuItemId) => {
+        const cartItem = cartItems.find(ci => ci.menu_item_id === menuItemId);
+        return cartItem ? cartItem.quantity : 0;
+    };
+
+    const getCartItemId = (menuItemId) => {
+        const cartItem = cartItems.find(ci => ci.menu_item_id === menuItemId);
+        return cartItem ? cartItem.id : null;
+    };
+
+    const handleIncrement = async (menuItemId) => {
+        if (!user) { toast.error("Please login"); return; }
+        try {
+            setAddingItemId(menuItemId);
+            await addToCart(menuItemId, 1);
+        } catch { toast.error("Couldn't update"); }
+        finally { setAddingItemId(null); }
+    };
+
+    const handleDecrement = async (menuItemId) => {
+        const cartItemId = getCartItemId(menuItemId);
+        const qty = getCartQuantity(menuItemId);
+        if (!cartItemId) return;
+        try {
+            setAddingItemId(menuItemId);
+            if (qty <= 1) {
+                await removeItem(cartItemId);
+            } else {
+                await updateItem(cartItemId, qty - 1);
+            }
+        } catch { toast.error("Couldn't update"); }
+        finally { setAddingItemId(null); }
     };
 
     const openItemDetail = (item) => {
@@ -249,28 +287,40 @@ const MenuPage = () => {
 
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8" onClick={() => setShowSuggestions(false)}>
                 {/* Categories View */}
-                {!selectedCategory && (
+                {!selectedCategory && !viewAll && (
                     <>
                         {visibleCategories.length === 0 ? (
                             <div className="text-center py-16">
                                 <p className="text-charcoal/50 text-lg">No categories found</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                            <>
+                                {/* View All button */}
+                                <button
+                                    onClick={() => setViewAll(true)}
+                                    className="mb-5 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-light transition-all"
+                                >
+                                    View All Items
+                                </button>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                                 {visibleCategories.map((cat) => {
                                     const catItemCount = menuItems.filter(i => i.category_id === cat.id).length;
                                     return (
-                                        <button
+                                        <MagicBentoCard
                                             key={cat.id}
                                             onClick={() => { setSelectedCategory(cat); setSearchQuery(""); }}
-                                            className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all text-left group"
+                                            glowColor="26, 60, 52"
+                                            enableTilt={false}
+                                            enableMagnetism={true}
+                                            clickEffect={true}
+                                            enableBorderGlow={true}
                                         >
-                                            <div className="h-36 bg-primary-light/10 flex items-center justify-center overflow-hidden">
+                                            <div className="h-36 bg-primary-light/5 flex items-center justify-center overflow-hidden rounded-t-[19px]">
                                                 {cat.image_url ? (
                                                     <img
                                                         src={cat.image_url}
                                                         alt={cat.name}
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                        className="w-full h-full object-cover"
                                                     />
                                                 ) : (
                                                     <span className="text-5xl">🍽️</span>
@@ -283,17 +333,137 @@ const MenuPage = () => {
                                                 )}
                                                 <p className="text-accent text-sm font-medium mt-2">{catItemCount} items →</p>
                                             </div>
-                                        </button>
+                                        </MagicBentoCard>
                                     );
                                 })}
                             </div>
+                            </>
                         )}
                     </>
+                )}
+
+                {/* View All Items - grouped by category */}
+                {viewAll && !selectedCategory && (
+                    <div>
+                        <div className="flex items-center gap-3 mb-5">
+                            <button
+                                onClick={() => setViewAll(false)}
+                                className="px-4 py-2 bg-white text-charcoal border border-gray-200 rounded-lg text-sm font-medium hover:border-primary transition-all"
+                            >
+                                ← Back to Categories
+                            </button>
+                            <button
+                                onClick={() => setFoodTypeFilter("all")}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${foodTypeFilter === "all" ? "bg-primary text-white" : "bg-white text-charcoal border border-gray-200"}`}
+                            >
+                                All
+                            </button>
+                            <button
+                                onClick={() => setFoodTypeFilter("veg")}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${foodTypeFilter === "veg" ? "bg-green-500 text-white" : "bg-white text-charcoal border border-gray-200"}`}
+                            >
+                                <span className="w-3 h-3 border-2 border-current rounded-sm flex items-center justify-center"><span className="w-1.5 h-1.5 bg-current rounded-full"></span></span>
+                                Veg
+                            </button>
+                            <button
+                                onClick={() => setFoodTypeFilter("nonveg")}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${foodTypeFilter === "nonveg" ? "bg-red-500 text-white" : "bg-white text-charcoal border border-gray-200"}`}
+                            >
+                                <span className="w-3 h-3 border-2 border-current rounded-sm flex items-center justify-center"><span className="w-1.5 h-1.5 bg-current rounded-full"></span></span>
+                                Non-Veg
+                            </button>
+                        </div>
+
+                        {categories.map((cat) => {
+                            const catItems = menuItems.filter(i => {
+                                if (i.category_id !== cat.id) return false;
+                                if (foodTypeFilter === "veg") return i.is_veg || i.food_type === "veg" || i.food_type === "both";
+                                if (foodTypeFilter === "nonveg") return !i.is_veg || i.food_type === "non-veg" || i.food_type === "both";
+                                return true;
+                            });
+                            if (catItems.length === 0) return null;
+                            return (
+                                <div key={cat.id} className="mb-8">
+                                    <h2 className="text-lg font-bold text-charcoal mb-3 flex items-center gap-2">
+                                        <span className="w-1 h-6 bg-accent rounded-full"></span>
+                                        {cat.name}
+                                        <span className="text-sm font-normal text-charcoal/40">({catItems.length})</span>
+                                    </h2>
+                                    <div className="space-y-3">
+                                        {catItems.map((item) => (
+                                            <div
+                                                key={item.id}
+                                                className="bg-white rounded-xl p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                                                onClick={() => openItemDetail(item)}
+                                            >
+                                                <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-cream">
+                                                    {item.image_url ? (
+                                                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-2xl">🍽️</div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className="font-semibold text-charcoal text-sm">{item.name}</h3>
+                                                        {item.is_veg ? (
+                                                            <span className="w-3 h-3 border-2 border-green-600 rounded-sm flex items-center justify-center flex-shrink-0"><span className="w-1.5 h-1.5 bg-green-600 rounded-full"></span></span>
+                                                        ) : (
+                                                            <span className="w-3 h-3 border-2 border-red-600 rounded-sm flex items-center justify-center flex-shrink-0"><span className="w-1.5 h-1.5 bg-red-600 rounded-full"></span></span>
+                                                        )}
+                                                    </div>
+                                                    <span className="font-bold text-accent text-sm">₹{item.discount_price || item.price}</span>
+                                                </div>
+                                                {getCartQuantity(item.id) > 0 ? (
+                                                    <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                                        <button onClick={() => handleDecrement(item.id)} className="w-7 h-7 rounded-full bg-cream flex items-center justify-center hover:bg-accent hover:text-white transition-all"><Minus size={12} /></button>
+                                                        <span className="w-6 text-center font-semibold text-charcoal text-xs">{getCartQuantity(item.id)}</span>
+                                                        <button onClick={() => handleIncrement(item.id)} className="w-7 h-7 rounded-full bg-accent text-white flex items-center justify-center hover:bg-accent-dark transition-all"><Plus size={12} /></button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleAddToCart(item.id); }}
+                                                        className="bg-accent hover:bg-accent-dark text-white w-8 h-8 rounded-full flex items-center justify-center transition-all flex-shrink-0"
+                                                    >
+                                                        <Plus size={16} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 )}
 
                 {/* Items View (inside a category) */}
                 {selectedCategory && (
                     <>
+                        {/* Veg/Non-Veg filter */}
+                        <div className="flex gap-2 mb-6">
+                            <button
+                                onClick={() => setFoodTypeFilter("all")}
+                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${foodTypeFilter === "all" ? "bg-primary text-white" : "bg-white text-charcoal border border-gray-200"}`}
+                            >
+                                All
+                            </button>
+                            <button
+                                onClick={() => setFoodTypeFilter("veg")}
+                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${foodTypeFilter === "veg" ? "bg-green-500 text-white" : "bg-white text-charcoal border border-gray-200"}`}
+                            >
+                                <span className="w-3 h-3 border-2 border-current rounded-sm flex items-center justify-center"><span className="w-1.5 h-1.5 bg-current rounded-full"></span></span>
+                                Veg
+                            </button>
+                            <button
+                                onClick={() => setFoodTypeFilter("nonveg")}
+                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${foodTypeFilter === "nonveg" ? "bg-red-500 text-white" : "bg-white text-charcoal border border-gray-200"}`}
+                            >
+                                <span className="w-3 h-3 border-2 border-current rounded-sm flex items-center justify-center"><span className="w-1.5 h-1.5 bg-current rounded-full"></span></span>
+                                Non-Veg
+                            </button>
+                        </div>
+
                         {categoryItems.length === 0 ? (
                             <div className="text-center py-16">
                                 <p className="text-charcoal/50 text-lg">
@@ -301,79 +471,89 @@ const MenuPage = () => {
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {categoryItems.map((item) => (
-                                    <div
-                                        key={item.id}
-                                        className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-gray-100 flex flex-col cursor-pointer"
-                                        onClick={() => openItemDetail(item)}
-                                    >
+                            <AnimatedList
+                                items={categoryItems}
+                                showGradients={true}
+                                enableArrowNavigation={true}
+                                displayScrollbar={false}
+                                onItemSelect={(item) => openItemDetail(item)}
+                                renderItem={(item, index, isSelected) => (
+                                    <div className={`bg-white rounded-2xl p-4 flex items-center gap-4 transition-all ${isSelected ? "shadow-md" : "shadow-sm"}`}>
                                         {/* Image */}
-                                        <div className="h-48 bg-primary-light/5 overflow-hidden relative">
+                                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-cream">
                                             {item.image_url ? (
                                                 <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-5xl bg-cream">🍽️</div>
-                                            )}
-                                            {item.is_veg && (
-                                                <span className="absolute top-3 left-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                                                    <Leaf size={10} /> Veg
-                                                </span>
-                                            )}
-                                            {item.discount_price && parseFloat(item.discount_price) < parseFloat(item.price) && (
-                                                <span className="absolute top-3 right-3 bg-accent text-white text-xs px-2 py-1 rounded-full font-medium">
-                                                    {Math.round(((item.price - item.discount_price) / item.price) * 100)}% OFF
-                                                </span>
+                                                <div className="w-full h-full flex items-center justify-center text-3xl">🍽️</div>
                                             )}
                                         </div>
 
-                                        {/* Content */}
-                                        <div className="p-4 flex-1 flex flex-col">
-                                            <h3 className="font-bold text-charcoal text-lg">{item.name}</h3>
-
-                                            {/* Tags */}
-                                            <div className="flex flex-wrap gap-2 mt-2">
-                                                {item.calories && (
-                                                    <span className="bg-cream text-charcoal/60 text-xs px-2.5 py-1 rounded-full">{item.calories} cal</span>
+                                        {/* Info */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="font-semibold text-charcoal text-sm sm:text-base">{item.name}</h3>
+                                                {item.is_veg ? (
+                                                    <span className="w-3.5 h-3.5 border-2 border-green-600 rounded-sm flex items-center justify-center flex-shrink-0"><span className="w-1.5 h-1.5 bg-green-600 rounded-full"></span></span>
+                                                ) : (
+                                                    <span className="w-3.5 h-3.5 border-2 border-red-600 rounded-sm flex items-center justify-center flex-shrink-0"><span className="w-1.5 h-1.5 bg-red-600 rounded-full"></span></span>
+                                                )}
+                                            </div>
+                                            {item.description && (
+                                                <p className="text-charcoal/50 text-xs sm:text-sm mt-0.5 line-clamp-1">{item.description}</p>
+                                            )}
+                                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                                {item.discount_price && parseFloat(item.discount_price) < parseFloat(item.price) ? (
+                                                    <>
+                                                        <span className="font-bold text-accent text-sm">₹{item.discount_price}</span>
+                                                        <span className="text-charcoal/40 text-xs line-through">₹{item.price}</span>
+                                                    </>
+                                                ) : (
+                                                    <span className="font-bold text-accent text-sm">₹{item.price}</span>
                                                 )}
                                                 {item.preparation_time && (
-                                                    <span className="bg-cream text-charcoal/60 text-xs px-2.5 py-1 rounded-full flex items-center gap-1">
-                                                        <Clock size={10} /> {item.preparation_time} min
+                                                    <span className="text-charcoal/40 text-xs flex items-center gap-0.5">
+                                                        <Clock size={10} /> {item.preparation_time}min
                                                     </span>
                                                 )}
                                             </div>
+                                        </div>
 
-                                            {/* Description */}
-                                            {item.description && (
-                                                <p className="text-charcoal/50 text-sm mt-3 line-clamp-3">{item.description}</p>
-                                            )}
-
-                                            {/* Price + Add to cart */}
-                                            <div className="mt-auto pt-4 flex items-center justify-between">
-                                                <div>
-                                                    {item.discount_price && parseFloat(item.discount_price) < parseFloat(item.price) ? (
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-xl font-bold text-charcoal">₹{item.discount_price}</span>
-                                                            <span className="text-charcoal/40 text-sm line-through">₹{item.price}</span>
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-xl font-bold text-charcoal">₹{item.price}</span>
-                                                    )}
-                                                </div>
+                                        {/* Quick add / quantity control */}
+                                        {getCartQuantity(item.id) > 0 ? (
+                                            <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                                                 <button
-                                                    onClick={(e) => { e.stopPropagation(); handleAddToCart(item.id); }}
+                                                    onClick={() => handleDecrement(item.id)}
                                                     disabled={addingItemId === item.id}
-                                                    className="bg-accent hover:bg-accent-dark text-white px-5 py-2.5 rounded-full text-sm font-medium transition-all disabled:opacity-50 flex items-center gap-1.5"
-                                                    aria-label={`Add ${item.name} to cart`}
+                                                    className="w-8 h-8 rounded-full bg-cream flex items-center justify-center hover:bg-accent hover:text-white transition-all disabled:opacity-50"
+                                                    aria-label="Decrease"
                                                 >
-                                                    <Plus size={16} />
-                                                    {addingItemId === item.id ? "Adding..." : "Add to cart"}
+                                                    <Minus size={14} />
+                                                </button>
+                                                <span className="w-7 text-center font-semibold text-charcoal text-sm">
+                                                    <Counter value={getCartQuantity(item.id)} fontSize={14} textColor="#1a1a1a" fontWeight={600} />
+                                                </span>
+                                                <button
+                                                    onClick={() => handleIncrement(item.id)}
+                                                    disabled={addingItemId === item.id}
+                                                    className="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center hover:bg-accent-dark transition-all disabled:opacity-50"
+                                                    aria-label="Increase"
+                                                >
+                                                    <Plus size={14} />
                                                 </button>
                                             </div>
-                                        </div>
+                                        ) : (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleAddToCart(item.id); }}
+                                                disabled={addingItemId === item.id}
+                                                className="bg-accent hover:bg-accent-dark text-white w-10 h-10 rounded-full flex items-center justify-center transition-all disabled:opacity-50 flex-shrink-0"
+                                                aria-label={`Add ${item.name}`}
+                                            >
+                                                <Plus size={18} />
+                                            </button>
+                                        )}
                                     </div>
-                                ))}
-                            </div>
+                                )}
+                            />
                         )}
                     </>
                 )}
@@ -406,15 +586,13 @@ const MenuPage = () => {
 
                         {/* Content */}
                         <div className="p-5">
-                            {/* Veg badge */}
-                            {selectedItem.is_veg && (
-                                <span className="inline-flex items-center gap-1 text-green-600 text-xs font-medium mb-2">
-                                    <span className="w-4 h-4 border-2 border-green-600 rounded-sm flex items-center justify-center">
-                                        <span className="w-2 h-2 bg-green-600 rounded-full"></span>
-                                    </span>
-                                    Veg
+                            {/* Veg/Non-veg badge */}
+                            <span className={`inline-flex items-center gap-1 text-xs font-medium mb-2 ${selectedItem.is_veg ? 'text-green-600' : 'text-red-600'}`}>
+                                <span className={`w-4 h-4 border-2 ${selectedItem.is_veg ? 'border-green-600' : 'border-red-600'} rounded-sm flex items-center justify-center`}>
+                                    <span className={`w-2 h-2 ${selectedItem.is_veg ? 'bg-green-600' : 'bg-red-600'} rounded-full`}></span>
                                 </span>
-                            )}
+                                {selectedItem.is_veg ? 'Veg' : 'Non-Veg'}
+                            </span>
 
                             <h2 className="text-xl font-bold text-charcoal">{selectedItem.name}</h2>
 

@@ -3,7 +3,8 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import { AdminAuthProvider } from "./context/AdminAuthContext.jsx";
-import Navbar from "./components/Navbar.jsx";
+import PillNav from "./components/PillNav.jsx";
+import CardNav from "./components/CardNav.jsx";
 import Footer from "./components/Footer.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminProtectedRoute from "./components/AdminProtectedRoute.jsx";
@@ -37,8 +38,9 @@ function App() {
                 path="/*"
                 element={
                   <div className="flex flex-col min-h-screen">
-                    <Navbar />
-                    <main className="flex-1">
+                    <PillNav />
+                    <CardNav />
+                    <main className="flex-1 pt-20">
                       <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/login" element={<Login />} />

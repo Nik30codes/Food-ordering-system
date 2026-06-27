@@ -6,11 +6,14 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { placeOrder } from "../services/orderService.js";
 import { toast } from "sonner";
+import Counter from "../components/Counter.jsx";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const Cart = () => {
     const { cartItems, itemCount, updateItem, removeItem, clearCartItems, fetchCart } = useCart();
     const { user } = useAuth();
     const [placingOrder, setPlacingOrder] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
     const navigate = useNavigate();
 
     // Calculate bill
@@ -90,8 +93,12 @@ const Cart = () => {
                             order_id: orderId,
                         });
                         await fetchCart(); // Refresh cart state
-                        toast.success("Payment successful! Order confirmed.");
-                        navigate("/orders");
+                        // Show success animation
+                        setShowSuccess(true);
+                        setTimeout(() => {
+                            setShowSuccess(false);
+                            navigate("/orders");
+                        }, 2500);
                     } catch {
                         toast.error("Payment verification failed. Contact support.");
                         navigate("/orders");
@@ -134,6 +141,21 @@ const Cart = () => {
             toast.error("Couldn't clear cart");
         }
     };
+
+    if (showSuccess) {
+        return (
+            <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4">
+                <DotLottieReact
+                    src="/Success.lottie"
+                    autoplay
+                    loop={false}
+                    style={{ width: 200, height: 200 }}
+                />
+                <p className="text-xl font-bold text-charcoal mt-4">Order Placed!</p>
+                <p className="text-charcoal/60 text-sm mt-1">Redirecting to your orders...</p>
+            </div>
+        );
+    }
 
     if (itemCount === 0) {
         return (
@@ -252,9 +274,9 @@ const Cart = () => {
                         <div className="border-t border-dashed border-gray-200 pt-3 flex justify-between font-semibold text-charcoal text-base">
                             <span>Total</span>
                             <div className="text-right">
-                                <span className="text-lg">₹{totalBill.toFixed(2)}</span>
+                                <span className="text-lg">₹<Counter value={Math.round(totalBill)} fontSize={18} textColor="#1a1a1a" fontWeight={700} /></span>
                                 {totalDiscount > 0 && (
-                                    <p className="text-xs text-green-600 font-medium mt-0.5">You save ₹{totalDiscount.toFixed(2)}</p>
+                                    <p className="text-xs text-green-600 font-medium mt-0.5">You save ₹<Counter value={Math.round(totalDiscount)} fontSize={12} textColor="#16a34a" fontWeight={600} /></p>
                                 )}
                             </div>
                         </div>
@@ -274,7 +296,7 @@ const Cart = () => {
                         disabled={placingOrder}
                         className="bg-accent hover:bg-accent-dark text-white px-8 py-3 rounded-full font-medium flex items-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-accent/20"
                     >
-                        {placingOrder ? "Placing..." : `Place Order • ₹${totalBill.toFixed(0)}`} <ArrowRight size={18} />
+                        {placingOrder ? "Placing..." : `Place Order • ₹${Math.round(totalBill)}`} <ArrowRight size={18} />
                     </button>
                 </div>
             </div>

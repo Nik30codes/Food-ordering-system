@@ -47,11 +47,8 @@ export const handleRazorpayWebhook = async (req, res) => {
           [razorpayPaymentId, orderId, razorpayOrderId]
         );
 
-        // Update order status to confirmed
-        await pool.query(
-          "UPDATE orders SET status = 'confirmed', updated_at = NOW() WHERE id = $1 AND status = 'pending'",
-          [orderId]
-        );
+        // Order stays pending — admin controls status manually
+        // Payment captured is recorded but order status stays as-is
 
         console.log(`[WEBHOOK] Payment captured for Order #${orderId} — ₹${amount}`);
       }
