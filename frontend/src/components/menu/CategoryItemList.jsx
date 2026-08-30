@@ -1,4 +1,4 @@
-import { Plus, Minus, Clock, Star } from "lucide-react";
+import { Plus, Minus, Clock } from "lucide-react";
 import AnimatedList from "../AnimatedList.jsx";
 import Counter from "../Counter.jsx";
 
@@ -68,12 +68,6 @@ const CategoryItemList = ({
                                 </div>
                                 {item.description && (
                                     <p className="text-charcoal/50 text-xs sm:text-sm mt-0.5 line-clamp-1">{item.description}</p>
-                                )}
-                                {parseFloat(item.review_count) > 0 && (
-                                    <span className="flex items-center gap-1 text-charcoal/50 text-xs mt-0.5">
-                                        <Star size={11} className="text-accent fill-accent" />
-                                        {parseFloat(item.avg_rating).toFixed(1)} ({item.review_count})
-                                    </span>
                                 )}
                                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                                     {item.discount_price && parseFloat(item.discount_price) < parseFloat(item.price) ? (

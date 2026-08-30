@@ -32,11 +32,9 @@ router.get("/items", async (req, res, next) => {
       SELECT mi.id, mi.restaurant_id, mi.category_id, mi.name, mi.description,
              mi.price, mi.discount_price, mi.image_url, mi.is_veg, mi.is_available,
              mi.preparation_time, mi.calories, mi.display_order,
-             c.name as category_name,
-             COALESCE(AVG(r.rating), 0) AS avg_rating, COUNT(r.id) AS review_count
+             c.name as category_name
       FROM menu_items mi
       JOIN categories c ON mi.category_id = c.id
-      LEFT JOIN reviews r ON r.menu_item_id = mi.id
       WHERE mi.is_available = TRUE AND c.is_active = TRUE
         AND mi.restaurant_id = ${ACTIVE_RESTAURANT_ID_SUBQUERY}
     `;
@@ -46,8 +44,6 @@ router.get("/items", async (req, res, next) => {
             params.push(categoryId);
             query += ` AND mi.category_id = $${params.length}`;
         }
-
-        query += " GROUP BY mi.id, c.name";
 
         // Not real pagination — a restaurant's menu is naturally bounded, and the
         // frontend fetches the whole catalog once for client-side search/filter.

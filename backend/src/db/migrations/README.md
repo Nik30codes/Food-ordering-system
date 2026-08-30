@@ -22,6 +22,10 @@ psql -U postgres -d akio_db -f src/db/migrations/013_create_admin_users.sql
 psql -U postgres -d akio_db -f src/db/migrations/014_create_analytics_summary.sql
 psql -U postgres -d akio_db -f src/db/migrations/015_add_missing_columns.sql
 psql -U postgres -d akio_db -f src/db/migrations/016_add_indexes.sql
+psql -U postgres -d akio_db -f src/db/migrations/017_add_phone_verified.sql
+psql -U postgres -d akio_db -f src/db/migrations/018_create_reviews.sql
+psql -U postgres -d akio_db -f src/db/migrations/019_create_coupons.sql
+psql -U postgres -d akio_db -f src/db/migrations/020_add_show_home_stats_to_restaurants.sql
 ```
 
 ## Notes
@@ -31,6 +35,10 @@ psql -U postgres -d akio_db -f src/db/migrations/016_add_indexes.sql
 - Migrations 007-014: Admin side (restaurants, categories, menu_items, images, tables, status history, admin_users, analytics)
 - Migration 015: adds columns that existed on the live DB by hand before being codified (food_type_choice, food_type, is_featured, gst_*)
 - Migration 016: adds indexes — Postgres doesn't auto-index foreign key columns, and none existed before this
+- Migration 017: phone_verified flag for OTP-gated registration
+- Migration 018: reviews — one rating (1-5) + optional comment per completed **order**, not per menu item. Feeds the home page's real customer count/rating and testimonials.
+- Migration 019: coupons
+- Migration 020: restaurants.show_home_stats — admin toggle to show/hide the real customer count & rating on the home page
 - Check this directory's actual file listing for the current highest migration number — this README can lag behind new migrations.
 
 ## Table Overview
@@ -51,3 +59,9 @@ psql -U postgres -d akio_db -f src/db/migrations/016_add_indexes.sql
 | 012 | order_status_history | Tracks order status changes |
 | 013 | admin_users | Restaurant staff (Owner/Manager/Staff roles) |
 | 014 | analytics_summary | Daily revenue/order analytics per restaurant |
+| 015 | (columns) | food_type_choice, food_type, is_featured, gst_* on existing tables |
+| 016 | (indexes) | Foreign key / hot-path indexes |
+| 017 | (column) | users.phone_verified |
+| 018 | reviews | Customer ratings (1-5) + comments on completed orders |
+| 019 | coupons | Discount coupons |
+| 020 | restaurants.show_home_stats | Admin toggle to show/hide customer count & rating on home page |

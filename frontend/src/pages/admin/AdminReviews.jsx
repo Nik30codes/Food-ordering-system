@@ -45,7 +45,7 @@ const AdminReviews = () => {
     const totalPages = Math.max(1, Math.ceil(total / limit));
 
     const columns = [
-        { key: "item_name", label: "Item", render: (row) => <span className="font-medium">{row.item_name}</span> },
+        { key: "order_id", label: "Order", render: (row) => <span className="font-medium">#{row.order_id}</span> },
         { key: "customer_name", label: "Customer" },
         { key: "rating", label: "Rating", render: (row) => <StarRating value={row.rating} size={14} /> },
         { key: "comment", label: "Comment", render: (row) => <span className="text-charcoal/60">{row.comment || "—"}</span> },
@@ -67,7 +67,7 @@ const AdminReviews = () => {
 
     return (
         <div>
-            <AdminPageHeader title="Reviews" subtitle="Customer ratings and comments on your menu items" />
+            <AdminPageHeader title="Reviews" subtitle="Customer ratings and comments on their completed orders" />
 
             <AdminTable
                 columns={columns}

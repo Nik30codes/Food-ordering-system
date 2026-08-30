@@ -33,6 +33,7 @@ import reviewRoutes from "./routes/reviewRoutes.js";
 import adminReviewRoutes from "./routes/adminReviewRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
 import adminCouponRoutes from "./routes/adminCouponRoutes.js";
+import statsRoutes from "./routes/statsRoutes.js";
 
 // Fail fast and loud on a missing required secret, instead of booting
 // "successfully" and only breaking confusingly on a customer's first
@@ -116,6 +117,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/menu", publicMenuRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/coupons", couponRoutes);
+app.use("/api/stats", statsRoutes);
 
 // Routes — Admin side
 app.use("/api/admin/auth", adminAuthRoutes);

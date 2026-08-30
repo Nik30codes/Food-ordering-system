@@ -1,103 +1,115 @@
 import pool from "../db/db.js";
 
-// POST /api/reviews — create or update the logged-in customer's review for
-// a menu item. Only allowed if they have at least one COMPLETED order
-// containing that item — reviews are meant to be verified-purchase, not
-// open to anyone who's merely browsed the menu.
-export const createOrUpdateReview = async (req, res, next) => {
+// POST /api/reviews — Submit a rating for a completed order (one per order,
+// verified by ownership + status — not open to anyone who's merely browsed).
+export const createReview = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { menu_item_id, rating, comment } = req.body;
+    const { order_id, rating, comment } = req.body;
 
-    const item = await pool.query(
-      "SELECT id, restaurant_id FROM menu_items WHERE id = $1",
-      [menu_item_id]
+    const order = await pool.query(
+      "SELECT id, restaurant_id, status FROM orders WHERE id = $1 AND user_id = $2",
+      [order_id, userId]
     );
-    if (item.rows.length === 0) {
-      return res.status(404).json({ message: "Menu item not found" });
+
+    if (order.rows.length === 0) {
+      return res.status(404).json({ message: "Order not found" });
     }
 
-    const purchased = await pool.query(
-      `SELECT 1 FROM order_items oi
-       JOIN orders o ON oi.order_id = o.id
-       WHERE o.user_id = $1 AND oi.menu_item_id = $2 AND o.status = 'completed'
-       LIMIT 1`,
-      [userId, menu_item_id]
-    );
-    if (purchased.rows.length === 0) {
-      return res.status(403).json({ message: "You can only review items from a completed order" });
+    if (order.rows[0].status !== "completed") {
+      return res.status(400).json({ message: "You can only review completed orders" });
     }
 
-    const result = await pool.query(
-      `INSERT INTO reviews (user_id, menu_item_id, restaurant_id, rating, comment, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-       ON CONFLICT (user_id, menu_item_id)
-       DO UPDATE SET rating = $4, comment = $5, updated_at = NOW()
-       RETURNING id, rating, comment, created_at, updated_at`,
-      [userId, menu_item_id, item.rows[0].restaurant_id, rating, comment || null]
+    const existing = await pool.query("SELECT id FROM reviews WHERE order_id = $1", [order_id]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ message: "You have already reviewed this order" });
+    }
+
+    const review = await pool.query(
+      `INSERT INTO reviews (restaurant_id, user_id, order_id, rating, comment, created_at)
+       VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *`,
+      [order.rows[0].restaurant_id, userId, order_id, rating, comment || null]
     );
 
-    res.status(201).json({ review: result.rows[0] });
+    res.status(201).json({ message: "Review submitted", review: review.rows[0] });
   } catch (error) {
     next(error);
   }
 };
 
-// GET /api/reviews/item/:itemId — public list of reviews for one menu item
-export const getReviewsForItem = async (req, res, next) => {
+// GET /api/reviews/order/:orderId — Get the current user's review for a specific order (if any)
+export const getReviewForOrder = async (req, res, next) => {
   try {
-    const itemId = parseInt(req.params.itemId);
-    if (isNaN(itemId)) {
-      return res.status(400).json({ message: "Invalid item ID" });
+    const userId = req.user.id;
+    const orderId = parseInt(req.params.orderId);
+
+    if (isNaN(orderId)) {
+      return res.status(400).json({ message: "Invalid order ID" });
     }
+
+    const review = await pool.query(
+      "SELECT * FROM reviews WHERE order_id = $1 AND user_id = $2",
+      [orderId, userId]
+    );
+
+    res.json({ review: review.rows[0] || null });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/reviews/public — Public: real customer reviews that include a written comment,
+// for display as testimonials. Never fabricated — empty array if nobody has left one yet.
+export const getPublicReviews = async (req, res, next) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 6, 20);
 
     const reviews = await pool.query(
-      `SELECT r.id, r.rating, r.comment, r.created_at, u.name AS customer_name
+      `SELECT r.id, r.rating, r.comment, r.created_at, u.name as user_name
        FROM reviews r
        JOIN users u ON r.user_id = u.id
-       WHERE r.menu_item_id = $1
+       WHERE r.comment IS NOT NULL AND TRIM(r.comment) != ''
        ORDER BY r.created_at DESC
-       LIMIT 100`,
-      [itemId]
+       LIMIT $1`,
+      [limit]
     );
 
-    const summary = await pool.query(
-      `SELECT COALESCE(AVG(rating), 0) AS avg_rating, COUNT(*) AS review_count
-       FROM reviews WHERE menu_item_id = $1`,
-      [itemId]
-    );
-
-    res.json({
-      reviews: reviews.rows,
-      avg_rating: parseFloat(summary.rows[0].avg_rating),
-      review_count: parseInt(summary.rows[0].review_count),
+    // Show first name + last initial only (e.g. "Priya S.") — don't expose full names publicly
+    const testimonials = reviews.rows.map((r) => {
+      const parts = r.user_name.trim().split(/\s+/);
+      const displayName = parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0];
+      return { id: r.id, rating: r.rating, comment: r.comment, name: displayName, created_at: r.created_at };
     });
+
+    res.json({ reviews: testimonials });
   } catch (error) {
     next(error);
   }
 };
 
-// GET /api/reviews/reviewable — menu items the logged-in customer has
-// completed an order for, along with whether they've already reviewed each
-// one (so the frontend can show "Rate this" vs "Edit your review").
-export const getReviewableItems = async (req, res, next) => {
+// GET /api/admin/reviews — moderation list for the admin's restaurant, most recent first
+export const getReviewsAdmin = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const restaurantId = req.admin.restaurant_id;
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 20, 1), 100);
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const offset = (page - 1) * limit;
 
     const result = await pool.query(
-      `SELECT DISTINCT ON (mi.id)
-         mi.id, mi.name, mi.image_url,
-         r.id AS review_id, r.rating, r.comment
-       FROM order_items oi
-       JOIN orders o ON oi.order_id = o.id
-       JOIN menu_items mi ON oi.menu_item_id = mi.id
-       LEFT JOIN reviews r ON r.menu_item_id = mi.id AND r.user_id = $1
-       WHERE o.user_id = $1 AND o.status = 'completed'
-       ORDER BY mi.id`,
-      [userId]
+      `SELECT r.id, r.rating, r.comment, r.created_at, r.order_id, u.name AS customer_name,
+              COUNT(*) OVER() AS total_count
+       FROM reviews r
+       JOIN users u ON r.user_id = u.id
+       WHERE r.restaurant_id = $1
+       ORDER BY r.created_at DESC
+       LIMIT $2 OFFSET $3`,
+      [restaurantId, limit, offset]
     );
 
-    res.json({ items: result.rows });
+    const total = result.rows[0]?.total_count ? parseInt(result.rows[0].total_count) : 0;
+    const reviews = result.rows.map(({ total_count, ...row }) => row);
+
+    res.json({ reviews, page, limit, total });
   } catch (error) {
     next(error);
   }
@@ -121,35 +133,6 @@ export const deleteReviewAdmin = async (req, res, next) => {
     }
 
     res.json({ message: "Review deleted" });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// GET /api/admin/reviews — moderation list, most recent first
-export const getReviewsAdmin = async (req, res, next) => {
-  try {
-    const restaurantId = req.admin.restaurant_id;
-    const limit = Math.min(Math.max(parseInt(req.query.limit) || 20, 1), 100);
-    const page = Math.max(parseInt(req.query.page) || 1, 1);
-    const offset = (page - 1) * limit;
-
-    const result = await pool.query(
-      `SELECT r.id, r.rating, r.comment, r.created_at, u.name AS customer_name, mi.name AS item_name,
-              COUNT(*) OVER() AS total_count
-       FROM reviews r
-       JOIN users u ON r.user_id = u.id
-       JOIN menu_items mi ON r.menu_item_id = mi.id
-       WHERE r.restaurant_id = $1
-       ORDER BY r.created_at DESC
-       LIMIT $2 OFFSET $3`,
-      [restaurantId, limit, offset]
-    );
-
-    const total = result.rows[0]?.total_count ? parseInt(result.rows[0].total_count) : 0;
-    const reviews = result.rows.map(({ total_count, ...row }) => row);
-
-    res.json({ reviews, page, limit, total });
   } catch (error) {
     next(error);
   }

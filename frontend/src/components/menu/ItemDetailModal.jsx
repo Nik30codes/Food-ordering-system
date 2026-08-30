@@ -1,31 +1,9 @@
-import { useState, useEffect } from "react";
 import { Minus, Plus, Clock } from "lucide-react";
-import StarRating from "../StarRating.jsx";
-import { getReviewsForItem } from "../../services/reviewService.js";
-import { timeAgo } from "../../utils/timeAgo.js";
 
 const ItemDetailModal = ({
     selectedItem, setSelectedItem, itemQuantity, setItemQuantity,
     foodTypeChoice, setFoodTypeChoice, addingItemId, handleAddToCart,
 }) => {
-    const [reviews, setReviews] = useState([]);
-
-    useEffect(() => {
-        if (!selectedItem) {
-            setReviews([]);
-            return;
-        }
-        const fetchReviews = async () => {
-            try {
-                const data = await getReviewsForItem(selectedItem.id);
-                setReviews(data.reviews || []);
-            } catch {
-                setReviews([]);
-            }
-        };
-        fetchReviews();
-    }, [selectedItem]);
-
     if (!selectedItem) return null;
 
     return (
@@ -64,16 +42,6 @@ const ItemDetailModal = ({
 
                     <h2 className="text-xl font-bold text-charcoal">{selectedItem.name}</h2>
 
-                    {/* Rating summary */}
-                    {parseFloat(selectedItem.review_count) > 0 && (
-                        <div className="flex items-center gap-2 mt-1">
-                            <StarRating value={parseFloat(selectedItem.avg_rating)} size={14} />
-                            <span className="text-charcoal/50 text-xs">
-                                {parseFloat(selectedItem.avg_rating).toFixed(1)} ({selectedItem.review_count} review{parseFloat(selectedItem.review_count) === 1 ? "" : "s"})
-                            </span>
-                        </div>
-                    )}
-
                     {/* Tags */}
                     <div className="flex flex-wrap gap-2 mt-2">
                         {selectedItem.calories && (
@@ -92,27 +60,6 @@ const ItemDetailModal = ({
                     {/* Description */}
                     {selectedItem.description && (
                         <p className="text-charcoal/60 text-sm mt-3 leading-relaxed">{selectedItem.description}</p>
-                    )}
-
-                    {/* Reviews */}
-                    {reviews.length > 0 && (
-                        <div className="mt-4 pt-4 border-t border-gray-100">
-                            <p className="text-sm font-semibold text-charcoal mb-2">Reviews</p>
-                            <div className="space-y-3 max-h-40 overflow-y-auto">
-                                {reviews.map((review) => (
-                                    <div key={review.id}>
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-medium text-charcoal text-xs">{review.customer_name}</span>
-                                            <StarRating value={review.rating} size={11} />
-                                            <span className="text-charcoal/30 text-[10px]">{timeAgo(review.created_at)}</span>
-                                        </div>
-                                        {review.comment && (
-                                            <p className="text-charcoal/60 text-xs mt-0.5">{review.comment}</p>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
                     )}
 
                     {/* Veg/Non-Veg choice for "both" items */}
